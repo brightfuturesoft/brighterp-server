@@ -79,10 +79,11 @@ bright-erp-server/
 **Set up `.env`**
 
    ```env
-   PORT=
-   DB_URI=
-   JWT_SECRET=
-   CLOUDINARY_API_KEY=
+MONGO_URI=
+PORT=
+SERVER_URL
+NODE_ENV=
+
    ```
 
 **Start the server**
@@ -102,12 +103,3 @@ bright-erp-server/
  ```
 
 ---
-
-## 👨‍💼 Maintained By
-
-**Md. Mahadi Hasan**
-CEO & Founder, [Bright Future Soft](https://www.brightfuturesoft.com)
-📧 [ceo@brightfuturesoft.com](mailto:ceo@brightfuturesoft.com)
-🔗 [LinkedIn](https://www.linkedin.com/in/codewithmahadihasan/)
-# brighterp-server
-# brighterp-server
