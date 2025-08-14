@@ -1,0 +1,26 @@
+const express = require('express');
+const router = express.Router();
+const image_router = require('../modules/image/image_router');  // Adjust the path if necessary
+const initial_route = require('../modules/hooks/initial_route'); // Adjust the path if necessary
+const auth_router = require('../modules/auth/auth_router'); // Adjust the path if necessary
+
+// Define module routes
+const modulesRoutes = [
+      {
+            path: '/',         // Default path
+            route: initial_route,
+      },
+      {
+            path: '/image',    // Image routes
+            route: image_router,
+      },
+      {
+            path: '/auth',      // Auth routes
+            route: auth_router,
+      }
+];
+
+// Attach each route to the main router
+modulesRoutes.forEach(route => router.use(route.path, route.route));
+
+module.exports = router;

@@ -1,0 +1,12 @@
+# Dependency directories
+node_modules/
+
+# Lock files
+yarn.lock
+package-lock.json
+
+# IDE/editor settings
+.vscode/
+
+# Environment variables
+.env

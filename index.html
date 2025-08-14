@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>API Documentation</title>
+      <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/antd/4.24.7/antd.dark.min.css">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.production.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.production.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/antd/4.24.7/antd.min.js"></script>
+      <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/lucide@latest"></script>
+      <style>
+            body {
+                  margin: 0;
+                  padding: 0;
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                  background-color: #141414;
+                  color: #fff;
+            }
+
+            #root {
+                  height: 100vh;
+                  display: flex;
+                  flex-direction: column;
+            }
+
+            .parameter-name {
+                  color: #1890ff;
+                  font-weight: bold;
+            }
+
+            .sub-parameter-name {
+                  color: #52c41a;
+                  font-weight: bold;
+            }
+
+            pre {
+                  background-color: #1f1f1f;
+                  padding: 16px;
+                  border-radius: 4px;
+                  overflow-x: auto;
+            }
+
+            .ant-layout-sider {
+                  background: #001529;
+            }
+
+            .ant-menu-dark {
+                  background: #001529;
+            }
+
+            .ant-layout-header {
+                  background: #001529;
+                  padding: 0 24px;
+                  display: flex;
+                  align-items: center;
+            }
+
+            .ant-card {
+                  background: #1f1f1f;
+            }
+
+            .logo {
+                  height: 32px;
+                  margin: 16px;
+                  display: flex;
+                  align-items: center;
+                  font-size: 18px;
+                  font-weight: bold;
+                  color: #fff;
+            }
+
+            .logo svg {
+                  margin-right: 10px;
+            }
+
+            .endpoint-title {
+                  display: flex;
+                  align-items: center;
+                  margin-bottom: 16px;
+            }
+
+            .endpoint-title .lucide {
+                  margin-right: 12px;
+                  font-size: 24px;
+                  color: #4299e1;
+            }
+
+            .endpoint-title code {
+                  font-family: 'Courier New', Courier, monospace;
+                  background-color: #2d3748;
+                  color: #63b3ed;
+                  padding: 4px 8px;
+                  border-radius: 4px;
+                  font-size: 16px;
+            }
+
+            .method-tag {
+                  margin-left: 12px;
+                  font-size: 14px;
+                  font-weight: bold;
+            }
+
+            .response-container {
+                  background-color: #0d1117;
+                  padding: 16px;
+                  margin-top: 16px;
+            }
+
+            .response-header {
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 12px;
+            }
+
+            .copy-button {
+                  background-color: #30363d;
+                  border: none;
+                  color: #c9d1d9;
+                  padding: 4px 8px;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  transition: background-color 0.3s;
+            }
+
+            .copy-button:hover {
+                  background-color: #42494f;
+            }
+
+            .ant-menu-submenu-title {
+                  display: flex;
+                  align-items: center;
+            }
+
+            .ant-menu-submenu-arrow {
+                  color: #fff !important;
+            }
+
+            .ant-menu-item {
+                  padding-left: 48px !important;
+            }
+
+            .ant-menu-submenu-title .lucide {
+                  margin-right: 10px;
+            }
+
+            .ant-menu-item .lucide {
+                  margin-right: 10px;
+            }
+
+            .ant-menu-submenu-popup {
+                  background-color: #001529 !important;
+            }
+      </style>
+</head>
+
+<body>
+      <div id="root"></div>
+
+      <script type="text/babel">
+            const { Layout, Menu, Typography, Table, Card, Tag, Divider, Button, message } = antd;
+            const { Header, Content, Sider } = Layout;
+            const { Title, Paragraph, Text } = Typography;
+            const { SubMenu } = Menu;
+
+            const categories = {
+                  Welcome: {
+                        icon: 'home',
+                        items: [{
+                              key: '1',
+                              name: 'Welcome',
+                              icon: 'home',
+                              endpoint: '/api/v1',
+                              method: 'GET',
+                              description: 'Welcome to API endpoint',
+                              parameters: [
+                                    { name: 'version', type: 'String', required: 'Yes', description: 'API version' },
+                                    { name: 'format', type: 'String', required: 'No', description: 'Response format (json or xml)' }
+                              ],
+                              response: {
+                                    "error": false,
+                                    "message": "API is up and running.",
+                                    "request_id": 1728760953104,
+                                    "status_code": 200
+                              }
+                        }]
+                  },
+                  User: {
+                        icon: 'user',
+                        items: [{
+                              key: '2',
+                              name: 'Create User',
+                              icon: 'user-plus',
+                              endpoint: '/api/v1/users',
+                              method: 'POST',
+                              description: 'Create a new user',
+                              parameters: [
+                                    { name: 'username', type: 'String', required: 'Yes', description: 'User\'s username' },
+                                    { name: 'email', type: 'String', required: 'Yes', description: 'User\'s email address' },
+                                    { name: 'password', type: 'String', required: 'Yes', description: 'User\'s password' }
+                              ],
+                              response: {
+                                    status: 201,
+                                    message: "User created successfully",
+                                    user: {
+                                          id: 12345,
+                                          username: "newuser",
+                                          email: "newuser@example.com",
+                                          created_at: "2023-05-20T10:30:00Z"
+                                    }
+                              }
+                        }]
+                  },
+                  Image: {
+                        icon: 'image',
+                        items: [
+                              {
+                                    key: '3',
+                                    name: 'Get Image',
+                                    icon: 'image',
+                                    endpoint: '/api/v1/image/:id',
+                                    method: 'GET',
+                                    description: 'Get image by ID',
+                                    parameters: [
+                                          { name: 'id', type: 'Integer', required: 'Yes', description: 'Image ID' },
+                                          { name: 'size', type: 'String', required: 'No', description: 'Image size (small, medium, large)' }
+                                    ],
+                                    response: "https://example.com/images/67891.jpg"
+                              },
+                              {
+                                    key: '4',
+                                    name: 'Upload Image',
+                                    icon: 'upload',
+                                    endpoint: '/api/v1/image/upload-image',
+                                    method: 'PUT',
+                                    description: 'Upload an image',
+                                    parameters: [
+                                          { name: 'file', type: 'File', required: 'Yes', description: 'Image file to upload' },
+                                          { name: 'title', type: 'String', required: 'No', description: 'Image title' },
+                                          { name: 'tags', type: 'Array', required: 'No', description: 'Array of tags for the image' }
+                                    ],
+                                    response: {
+                                          status_code: 200,
+                                          error: false,
+                                          message: "Image uploaded successfully",
+                                          data: {
+                                                "image_url": "https://example.com/images/67891.jpg"
+                                          }
+                                    }
+                              }
+                        ]
+                  },
+                  Authentication: {
+                        icon: 'key',
+                        items: [
+                              {
+                                    key: '5',
+                                    name: 'Sign Up',
+                                    icon: 'user-plus',
+                                    endpoint: '/api/v1/auth/sign-up',
+                                    method: 'POST',
+                                    description: 'Create a new user and workspace',
+                                    parameters: [
+                                          {
+                                                name: 'user',
+                                                type: 'Object',
+                                                required: 'Yes',
+                                                description: 'User information',
+                                                subParameters: [
+                                                      { name: 'name', type: 'String', required: 'Yes', description: 'User\'s full name' },
+                                                      { name: 'email', type: 'String', required: 'Yes', description: 'User\'s email address' },
+                                                      { name: 'password', type: 'String', required: 'Yes', description: 'User\'s password' }
+                                                ]
+                                          },
+                                          {
+                                                name: 'workspace',
+                                                type: 'Object',
+                                                required: 'Yes',
+                                                description: 'Workspace information',
+                                                subParameters: [
+                                                      { name: 'name', type: 'String', required: 'Yes', description: 'Name of the workspace' },
+                                                      { name: 'image', type: 'String', required: 'Yes', description: 'URL of the workspace image' },
+                                                      { name: 'terms', type: 'String', required: 'Yes', description: 'Terms of service agreement' }
+                                                ]
+                                          }
+                                    ],
+                                    response: {
+                                          status_code: 200,
+                                          error: false,
+                                          data: null,
+                                          message: "Workspace created successfully"
+                                    }
+                              },
+                              {
+                                    key: '6',
+                                    name: 'Sign In',
+                                    icon: 'log-in',
+                                    endpoint: '/api/v1/auth/sign-in',
+                                    method: 'POST',
+                                    description: 'Sign in to a workspace',
+                                    parameters: [
+                                          { name: 'email', type: 'String', required: 'Yes', description: 'User\'s email address' },
+                                          { name: 'password', type: 'String', required: 'Yes', description: 'User\'s password' }
+                                    ],
+                                    response: {
+                                          status_code: 200,
+                                          error: false,
+                                          data: {
+                                                name: "John Doe",
+                                                email: "b9FJZ@example.com",
+                                                created_at: "2023-05-20T10:30:00Z",
+                                                updated_at: "2023-05-20T10:30:00Z",
+                                                workspace_id: 'workspace_id',
+                                                role: "workspace_admin",
+                                                is_active: true
+                                          },
+                                          message: "User signed in successfully"
+                                    }
+                              },
+                              {
+                                    key: '7',
+                                    name: 'Sign Out',
+                                    icon: 'log-out',
+                                    endpoint: '/api/v1/auth/sign-out',
+                                    method: 'POST',
+                                    description: 'Sign out of a workspace',
+                                    parameters: [
+                                          { name: 'workspace_id', type: 'String', required: 'Yes', description: 'Workspace ID' }
+                                    ],
+                                    response: {
+                                          status_code: 200,
+                                          error: false,
+                                          data: null,
+                                          message: "User signed out successfully"
+                                    }
+                              }
+                        ]
+                  }
+            };
+
+            function App() {
+                  const [selectedEndpoint, setSelectedEndpoint] = React.useState(categories.Welcome.items[0]);
+
+                  const renderParameters = (parameters) => {
+                        const columns = [
+                              {
+                                    title: 'Name',
+                                    dataIndex: 'name',
+                                    key: 'name',
+                                    render: (text, record) => (
+                                          <span className={record.subParameters ? 'parameter-name' : 'sub-parameter-name'}>
+                                                {text}
+                                          </span>
+                                    )
+                              },
+                              { title: 'Type', dataIndex: 'type', key: 'type' },
+                              { title: 'Required', dataIndex: 'required', key: 'required' },
+                              { title: 'Description', dataIndex: 'description', key: 'description' }
+                        ];
+
+                        const data = parameters.map((param, index) => ({
+                              key: index,
+                              ...param,
+                              children: param.subParameters
+                        }));
+
+                        return (
+                              <Table
+                                    columns={columns}
+                                    dataSource={data}
+                                    pagination={false}
+                                    expandable={{
+                                          defaultExpandAllRows: true
+                                    }}
+                              />
+                        );
+                  };
+
+                  const copyToClipboard = (text) => {
+                        navigator.clipboard.writeText(text).then(() => {
+                              message.success('Copied to clipboard');
+                        });
+                  };
+
+                  const handleEndpointSelect = ({ key }) => {
+                        for (const category of Object.values(categories)) {
+                              const endpoint = category.items.find(item => item.key === key);
+                              if (endpoint) {
+                                    setSelectedEndpoint(endpoint);
+                                    break;
+                              }
+                        }
+                  };
+
+                  return (
+                        <Layout style={{ minHeight: '100vh' }}>
+                              <Header className="header">
+                                    <div className="logo">
+                                          <i data-lucide="book-open"></i>
+                                          API Documentation
+                                    </div>
+                              </Header>
+                              <Layout>
+                                    <Sider width={250} className="site-layout-background">
+                                          <Menu
+                                                mode="inline"
+                                                defaultSelectedKeys={['1']}
+                                                defaultOpenKeys={['Welcome']}
+                                                style={{ height: '100%', borderRight: 0 }}
+                                                theme="dark"
+                                                onSelect={handleEndpointSelect}
+                                          >
+                                                {Object.entries(categories).map(([category, { icon, items }]) => (
+                                                      <SubMenu
+                                                            key={category}
+                                                            icon={<i data-lucide={icon}></i>}
+                                                            title={category}
+                                                      >
+                                                            {items.map(item => (
+                                                                  <Menu.Item key={item.key} icon={<i data-lucide={item.icon}></i>}>
+                                                                        {item.name}
+                                                                  </Menu.Item>
+                                                            ))}
+                                                      </SubMenu>
+                                                ))}
+                                          </Menu>
+                                    </Sider>
+                                    <Layout style={{ padding: '0 24px 24px' }}>
+                                          <Content
+                                                className="site-layout-background"
+                                                style={{
+                                                      padding: 24,
+                                                      margin: 0,
+                                                      minHeight: 280
+                                                }}
+                                          >
+                                                <Card>
+                                                      <div className="endpoint-title">
+                                                            <i data-lucide={selectedEndpoint.icon}></i>
+                                                            <code>{selectedEndpoint.endpoint}</code>
+                                                            <Tag color={
+                                                                  selectedEndpoint.method === 'GET' ? 'green' :
+                                                                        selectedEndpoint.method === 'POST' ? 'blue' :
+                                                                              selectedEndpoint.method === 'PUT' ? 'orange' : 'red'
+                                                            } className="method-tag">
+                                                                  {selectedEndpoint.method}
+                                                            </Tag>
+                                                      </div>
+                                                      <Paragraph>{selectedEndpoint.description}</Paragraph>
+                                                      <Divider />
+                                                      <Title level={5}>Parameters</Title>
+                                                      {renderParameters(selectedEndpoint.parameters)}
+                                                      <Divider />
+                                                      <Title level={5}>Response</Title>
+                                                      <div className="response-container">
+                                                            <div className="response-header">
+                                                                  <Text strong>Example Response</Text>
+                                                                  <Button
+                                                                        className="copy-button"
+                                                                        onClick={() => copyToClipboard(JSON.stringify(selectedEndpoint.response, null, 2))}
+                                                                        icon={<i data-lucide="copy"></i>}
+                                                                  >
+                                                                        Copy
+                                                                  </Button>
+                                                            </div>
+                                                            <pre>{JSON.stringify(selectedEndpoint.response, null, 2)}</pre>
+                                                      </div>
+                                                </Card>
+                                          </Content>
+                                    </Layout>
+                              </Layout>
+                        </Layout>
+                  );
+            }
+
+            ReactDOM.render(<App />, document.getElementById('root'));
+            lucide.createIcons();
+      </script>
+</body>
+
+</html>
