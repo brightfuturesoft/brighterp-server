@@ -31,7 +31,7 @@ function generateVerificationEmail(userName, workspaceName, verifyLink) {
     <table width="100%" cellpadding="0" cellspacing="0">
         <tr>
             <td style="text-align: center; padding-top: 20px; color: #888888; font-size: 12px;">
-                <p>&copy; 2023 {{workspace_name}}. All rights reserved.</p>
+                <p>&copy; ${new Date().getFullYear()} Bright ERP. All rights reserved.</p>
             </td>
         </tr>
     </table>

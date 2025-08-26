@@ -1,9 +1,10 @@
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-const { workspace_collection, user_collection, password_backup } = require("../../../collection/collections/auth");
+const { workspace_collection, user_collection, password_backup, otp_collection } = require("../../../collection/collections/auth");
 const { response_sender } = require("../../hooks/respose_sender");
 const send_email = require('../../../mail/send_email');
 const generateVerificationEmail = require('../../../mail/template/vericicationmail');
+const { ObjectId } = require('mongodb');
 
 
 // Encryption function
@@ -23,22 +24,7 @@ const encrypt = (text) => {
       };
 };
 
-// Decryption function
-const decrypt = (iv, encryptedData, secretKey) => {
-      const algorithm = 'aes-256-ctr';
-      const decipher = crypto.createDecipheriv(
-            algorithm,
-            Buffer.from(secretKey, 'hex'),
-            Buffer.from(iv, 'hex')
-      ); // Create the decipher
 
-      const decrypted = Buffer.concat([
-            decipher.update(Buffer.from(encryptedData, 'hex')),
-            decipher.final(),
-      ]); // Decrypt the data
-
-      return decrypted.toString('utf8'); // Return the decrypted text
-};
 
 const create_a_workspace = async (req, res, next) => {
       try {
@@ -74,8 +60,8 @@ const create_a_workspace = async (req, res, next) => {
 
             await send_email({
                   email: user_data.email,
-                  subject: "Verify your email",
-                  text: 'Verify your email',
+                  subject: "Verify your email | Bright ERP",
+                  text: 'Verify your email | Bright ERP',
                   html: generateVerificationEmail(user_data.name, workspace_data.name, `http://localhost:5173/verify-account/${created_user.insertedId}`),
             })
 
@@ -86,7 +72,7 @@ const create_a_workspace = async (req, res, next) => {
                   data: null,
                   message: "Workspace created successfully",
             });
-            
+
       } catch (error) {
             next(error);
       }
@@ -146,4 +132,39 @@ const create_workspace = async (data) => {
       return created_workspace;
 };
 
-module.exports = { create_a_workspace }
+const verify_user = async (req, res, next) => {
+      try {
+            const { token } = req.body;
+            if (!token) {
+                  return response_sender({
+                        res,
+                        status_code: 400,
+                        error: true,
+                        data: null,
+                        message: "User ID is required.",
+                  });
+            }
+            const user = await user_collection.findOne({ _id: new ObjectId(token) });
+            if (!user) {
+                  return response_sender({
+                        res,
+                        status_code: 404,
+                        error: true,
+                        data: null,
+                        message: "User not found.",
+                  });
+            }
+            await user_collection.updateOne({ _id: user._id }, { $set: { is_active: true } });
+            response_sender({
+                  res,
+                  status_code: 200,
+                  error: false,
+                  data: null,
+                  message: "User verified successfully.",
+            });
+      } catch (error) {
+            next(error);
+      }
+};
+
+module.exports = { create_a_workspace, verify_user }

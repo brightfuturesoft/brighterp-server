@@ -64,6 +64,7 @@ const sign_in = async (req, res, next) => {
                   });
             }
 
+
             // If the user is found and the password is valid, fetch the workspace
             const workspace = await workspace_collection.findOne({ _id: new ObjectId(find_user.workspace_id) });
 
