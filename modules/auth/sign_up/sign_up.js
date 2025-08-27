@@ -52,6 +52,8 @@ const create_a_workspace = async (req, res, next) => {
                   });
             }
 
+
+
             const created_workspace = await create_workspace(workspace_data);
             user_data.workspace_id = created_workspace.insertedId.toString();
             const created_user = await create_user(user_data);
@@ -125,7 +127,51 @@ const create_workspace = async (data) => {
             updated_at: new Date(),
             description: '',
             is_active: true,
-            permissions: []
+            permissions: [],
+            address_info: {
+                  country: '',
+                  state: '',
+                  city: '',
+                  zip_code: '',
+                  address: '',
+            },
+            basic_info: {
+                  name: data.name,
+                  description: '',
+                  legal_name: data.name,
+                  registration_number: '',
+                  vat_number: '',
+                  industry: '',
+            },
+            contact_info: {
+                  official_email: "",
+                  support_email: "",
+                  phone_number: [""],
+                  fax_number: "",
+            },
+            social_info: {
+                  facebook: "",
+                  twitter: "",
+                  linkedin: "",
+                  instagram: "",
+                  youtube: "",
+                  tiktok: "",
+                  whatsapp: "",
+                  telegram: "",
+            },
+            domain_info: {
+                  domain: "",
+                  subdomain: "",
+            },
+
+            message_info: {
+                  message_chat: false,
+                  whatsapp: false,
+                  messenger: false,
+                  phone_number: false,
+            },
+
+
       };
 
       const created_workspace = await workspace_collection.insertOne(workspace);
@@ -167,4 +213,38 @@ const verify_user = async (req, res, next) => {
       }
 };
 
-module.exports = { create_a_workspace, verify_user }
+const check_workspace_by_unique_id = async (req, res, next) => {
+      try {
+            const unique_id = req.query.unique_id;
+            if (!unique_id) {
+                  return response_sender({
+                        res,
+                        status_code: 400,
+                        error: true,
+                        data: null,
+                        message: "Unique ID is required.",
+                  });
+            }
+            const workspace = await workspace_collection.findOne({ unique_id });
+            if (!workspace) {
+                  return response_sender({
+                        res,
+                        status_code: 200,
+                        error: false,
+                        data: { available: true },
+                        message: "Workspace is available.",
+                  });
+            }
+            response_sender({
+                  res,
+                  status_code: 404,
+                  error: true,
+                  data: { available: false },
+                  message: "Workspace is not available.",
+            });
+      } catch (error) {
+            next(error);
+      }
+}
+
+module.exports = { create_a_workspace, verify_user, check_workspace_by_unique_id }
