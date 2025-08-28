@@ -2,12 +2,12 @@ const nodemailer = require('nodemailer');
 
 // Create a transporter using Gmail SMTP settings
 const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com', // ✅ 'server' এর জায়গায় host দিতে হবে
+      host: 'smtp.gmail.com',
       port: 465,
-      secure: true, // true for port 465, false for 587
+      secure: true,
       auth: {
-            user: 'brighterp.bfs@gmail.com', // ✅ তোমার Gmail address
-            pass: 'rgqi hypm hgmf kvdo',     // ✅ Gmail App Password (not account password)
+            user: process.env.GMAIL_USER,
+            pass: process.env.GMAIL_PASSWORD,
       },
 });
 
@@ -15,21 +15,21 @@ const transporter = nodemailer.createTransport({
 const send_email = async ({ email, subject, html, text }) => {
       try {
             const mailOptions = {
-                  from: '"Bright ERP" <brighterp.bfs@gmail.com>', // sender address with name
-                  to: email, // list of receivers
-                  subject: subject, // Subject line
-                  text: text || '', // plain text body
-                  html: html || '', // html body
+                  from: '"Bright ERP" <brighterp.bfs@gmail.com>',
+                  to: email,
+                  subject: subject,
+                  text: text || '',
+                  html: html || '',
             };
 
             const info = await transporter.sendMail(mailOptions);
 
-            console.log('✅ Message sent:', info.messageId);
+            console.log('Message sent:', info.messageId);
 
             return info;
       } catch (error) {
-            console.error('❌ Email send failed:', error);
-            throw error; // error re-throw for handling outside
+            console.error('Email send failed:', error);
+            throw error;
       }
 };
 

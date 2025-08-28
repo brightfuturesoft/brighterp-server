@@ -60,7 +60,6 @@ const create_item = async (req, res, next) => {
             updated_data.workspace_id = workspace_id;
             const user_name = await user_collection.findOne({ _id: new ObjectId(req.headers.authorization) })
             updated_data.created_by = user_name.name;
-
             const result = await item_collection.insertOne(updated_data);
             return response_sender({
                   res,
