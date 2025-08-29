@@ -8,7 +8,7 @@ const { create_item, get_item, update_item, delete_item } = require('./item_modu
 
 router.post('/create-item', check_user, create_item);
 router.get('/get-item', check_user, get_item);
-router.put('/update-item', check_user, update_item);
+router.patch('/update-item', check_user, update_item);
 router.delete('/delete-item', check_user, delete_item);
 
 
