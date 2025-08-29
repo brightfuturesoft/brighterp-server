@@ -78,19 +78,9 @@ const create_item = async (req, res, next) => {
 const update_item = async (req, res, next) => {
   try {
     const input_data = req.body;
+    const itemId = req.params.id;
     const workspace_id = req.headers.workspace_id;
     const user_id = req.headers.authorization;
-
-//     // Validate ID
-//     if (!input_data.id || !ObjectId.isValid(input_data.id)) {
-//       return response_sender({
-//         res,
-//         status_code: 400,
-//         error: true,
-//         data: null,
-//         message: "Invalid or missing item ID",
-//       });
-//     }
 
     // Check workspace
     const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
@@ -104,21 +94,6 @@ const update_item = async (req, res, next) => {
       });
     }
 
-    // Check duplicate code (excluding current item)
-    const find_item = await item_collection.findOne({
-      code: input_data.code,
-      // _id: { $ne: new ObjectId(input_data.id) }
-    });
-    if (find_item) {
-      return response_sender({
-        res,
-        status_code: 400,
-        error: true,
-        data: null,
-        message: "Item code already exists.",
-      });
-    }
-
     // Prepare updated data
     let updated_data = enrichData(input_data);
     updated_data.workspace_id = workspace_id;
@@ -127,9 +102,9 @@ const update_item = async (req, res, next) => {
     const user_doc = await user_collection.findOne({ _id: new ObjectId(user_id) });
     updated_data.created_by = user_doc ? user_doc.name : "Unknown";
 
-    // Update item
+    // Update item using _id and workspace_id
     const result = await item_collection.updateOne(
-      {  workspace_id },
+      { _id: new ObjectId(itemId)}, 
       { $set: updated_data }
     );
 
@@ -158,6 +133,48 @@ const update_item = async (req, res, next) => {
 
 
 
+const update_item_status = async (req, res, next) => {
+  try {
+    const { status } = req.body; 
+    const { id } = req.params; 
+    const workspace_id = req.headers.workspace_id;
+    const user_id = req.headers.authorization;
+
+    if (!status) {
+      return res.status(400).json({ error: true, message: "Status is required" });
+    }
+
+    // Check workspace
+    const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
+    if (!check_workspace) {
+      return res.status(404).json({ error: true, message: "Workspace not found" });
+    }
+
+    // Get user name
+    const user_doc = await user_collection.findOne({ _id: new ObjectId(user_id) });
+    const updated_by = user_doc ? user_doc.name : "Unknown";
+
+    // Update only status
+    const result = await item_collection.updateOne(
+      { _id: new ObjectId(id), workspace_id },
+      { $set: { status, updated_by: updated_by, updated_at: new Date() } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: true, message: "Item not found or workspace mismatch" });
+    }
+
+    return res.status(200).json({
+      error: false,
+      data: result,
+      message: "Item status updated successfully.",
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 const delete_item = async (req, res, next) => {
       try {
@@ -180,7 +197,6 @@ const delete_item = async (req, res, next) => {
             updated_data.delete = true;
 
             console.log(input_data._id);
-
             const result = await item_collection.updateOne({ _id: new ObjectId(input_data.id) }, { $set: updated_data });
             console.log(result);
             return response_sender({
@@ -195,4 +211,4 @@ const delete_item = async (req, res, next) => {
       }
 };
 
-module.exports = { create_item, get_item, update_item, delete_item }
+module.exports = { create_item, get_item, update_item, delete_item, update_item_status }
