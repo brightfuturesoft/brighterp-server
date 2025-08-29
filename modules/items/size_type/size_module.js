@@ -32,90 +32,116 @@ const get_size = async (req, res, next) => {
 
 const create_size = async (req, res, next) => {
       try {
-            const input_data = req.body;
-            console.log(input_data);
-            const workspace_id = req.headers.workspace_id;
-            const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
-            if (!check_workspace) {
-                  return response_sender({
-                        res,
-                        status_code: 404,
-                        error: true,
-                        data: null,
-                        message: "Workspace not found",
-                  });
-            }
-            const find_size = await size_collection.findOne({ code: input_data.code });
-            if (find_size) {
-                  return response_sender({
-                        res,
-                        status_code: 400,
-                        error: true,
-                        data: null,
-                        message: "Size already exist.",
-                  });
-            }
-            let updated_data = enrichData(input_data);
-            updated_data.workspace_id = workspace_id;
-            const user_name = await user_collection.findOne({ _id: new ObjectId(req.headers.authorization) })
-            updated_data.created_by = user_name.name;
-
-            const result = await size_collection.insertOne(updated_data);
-            return response_sender({
-                  res,
-                  status_code: 200,
-                  error: false,
-                  data: result,
-                  message: "Size created successfully.",
-            });
+        const input_data = req.body;
+        const workspace_id = req.headers.workspace_id;
+    
+        const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
+        if (!check_workspace) {
+          return response_sender({
+            res,
+            status_code: 404,
+            error: true,
+            data: null,
+            message: "Workspace not found",
+          });
+        }
+    
+        // Check for existing active/non-deleted size
+        const find_size = await size_collection.findOne({
+          sizeType: input_data.sizeType,
+          workspace_id,
+          delete: { $ne: true }, // ignore deleted sizes
+        });
+    
+        if (find_size) {
+          return response_sender({
+            res,
+            status_code: 400,
+            error: true,
+            data: null,
+            message: "Size already exists.",
+          });
+        }
+    
+        let updated_data = enrichData(input_data);
+        updated_data.workspace_id = workspace_id;
+        const user_name = await user_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
+        updated_data.created_by = user_name.name;
+        updated_data.delete = false; // ensure new size is not deleted
+    
+        const result = await size_collection.insertOne(updated_data);
+        return response_sender({
+          res,
+          status_code: 200,
+          error: false,
+          data: result,
+          message: "Size created successfully.",
+        });
       } catch (error) {
-            next(error);
+        next(error);
       }
-};
-
+    };
+    
 const update_size = async (req, res, next) => {
       try {
-            const input_data = req.body;
-
-            console.log(input_data);
-            const workspace_id = req.headers.workspace_id;
-            const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
-            if (!check_workspace) {
-                  return response_sender({
-                        res,
-                        status_code: 404,
-                        error: true,
-                        data: null,
-                        message: "Workspace not found",
-                  });
-            }
-            const find_size = await size_collection.findOne({ code: input_data.code });
-            if (find_size) {
-                  return response_sender({
-                        res,
-                        status_code: 400,
-                        error: true,
-                        data: null,
-                        message: "Size already exist.",
-                  });
-            }
-            let updated_data = enrichData(input_data);
-            updated_data.workspace_id = workspace_id;
-            const user_name = await user_collection.findOne({ _id: new ObjectId(req.headers.authorization) })
-            updated_data.created_by = user_name.name;
-
-            const result = await size_collection.updateOne({ _id: new ObjectId(input_data.id) }, { $set: updated_data });
-            return response_sender({
-                  res,
-                  status_code: 200,
-                  error: false,
-                  data: result,
-                  message: "Size updated successfully.",
-            });
+        const input_data = req.body;
+        const workspace_id = req.headers.workspace_id;
+    
+        // Check workspace exists
+        const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
+        if (!check_workspace) {
+          return response_sender({
+            res,
+            status_code: 404,
+            error: true,
+            data: null,
+            message: "Workspace not found",
+          });
+        }
+    
+        // Check for duplicate sizeType, excluding the current document
+        const find_size = await size_collection.findOne({
+            sizeType: input_data.sizeType,
+            _id: { $ne: new ObjectId(input_data.id) },
+            delete: { $ne: true }, // ignore deleted sizes
+          });
+          
+    
+        if (find_size) {
+          return response_sender({
+            res,
+            status_code: 400,
+            error: true,
+            data: null,
+            message: "Size already exist.",
+          });
+        }
+    
+        // Prepare updated data
+        let updated_data = enrichData(input_data);
+        updated_data.workspace_id = workspace_id;
+        const user_name = await user_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
+        updated_data.created_by = user_name.name;
+    
+        // Update the size document
+        const result = await size_collection.updateOne(
+          { _id: new ObjectId(input_data.id) },
+          { $set: updated_data }
+        );
+    
+        return response_sender({
+          res,
+          status_code: 200,
+          error: false,
+          data: result,
+          message: "Size updated successfully.",
+        });
+    
       } catch (error) {
-            next(error);
+        next(error);
       }
-};
+    };
+    
 
 const delete_size = async (req, res, next) => {
       try {

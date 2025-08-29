@@ -1,17 +1,18 @@
 const { MongoClient, ServerApiVersion } = require("mongodb");
 require("dotenv").config();
 
-const uri = process.env.MONGO_URI; // Ensure MONGO_URI is defined in .env
+const uri = process.env.MONGO_URI;
 
-// Create a MongoClient with the provided connection string
 const client = new MongoClient(uri, {
-      serverApi: {
-            version: ServerApiVersion.v1,
-            strict: true,
-            deprecationErrors: true,
-      },
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
 });
 
+client.connect()
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-
-module.exports = { uri, client };
+module.exports = { client };
