@@ -4,6 +4,7 @@ const { response_sender } = require("../../hooks/respose_sender");
 const {
   workspace_user,
   user_collection,
+  workspace_collection,
 } = require("../../../collection/collections/auth");
 const {
   workspace_collections,
@@ -16,7 +17,7 @@ const get_customers = async (req, res, next) => {
   try {
     const workspace_id = req.headers.workspace_id;
 
-    const check_workspace = await workspace_collections.findOne({
+    const check_workspace = await workspace_collection?.findOne({
       _id: new ObjectId(workspace_id),
     });
     if (!check_workspace) {
@@ -29,8 +30,8 @@ const get_customers = async (req, res, next) => {
       });
     }
 
-    const customers = await workspace_user
-      .find({ workspace_id, delete: { $ne: true } })
+    const customers = await workspace_collections
+      ?.find({ workspace_id, delete: { $ne: true } })
       .toArray();
 
     return response_sender({
@@ -52,8 +53,9 @@ const create_customer = async (req, res, next) => {
   try {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
+    // console.log(workspace_id);
 
-    const check_workspace = await workspace_collections.findOne({
+    const check_workspace = await workspace_collection.findOne({
       _id: new ObjectId(workspace_id),
     });
     if (!check_workspace) {
@@ -91,7 +93,7 @@ const create_customer = async (req, res, next) => {
     });
     updated_data.created_by = user_name?.name || "System";
 
-    const result = await workspace_user.insertOne(updated_data);
+    const result = await workspace_collections?.insertOne(updated_data);
 
     return response_sender({
       res,
@@ -113,7 +115,7 @@ const update_customer = async (req, res, next) => {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
 
-    const check_workspace = await workspace_collections.findOne({
+    const check_workspace = await workspace_collection.findOne({
       _id: new ObjectId(workspace_id),
     });
     if (!check_workspace) {
@@ -127,7 +129,7 @@ const update_customer = async (req, res, next) => {
     }
 
     // Check for duplicate phone/email except self
-    const duplicate = await workspace_user.findOne({
+    const duplicate = await workspace_collections.findOne({
       $or: [{ phone: input_data.phone }, { email: input_data.email }],
       _id: { $ne: new ObjectId(input_data.id) },
       workspace_id,
@@ -177,7 +179,7 @@ const delete_customer = async (req, res, next) => {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
 
-    const check_workspace = await workspace_collections.findOne({
+    const check_workspace = await workspace_collection.findOne({
       _id: new ObjectId(workspace_id),
     });
     if (!check_workspace) {
@@ -198,7 +200,7 @@ const delete_customer = async (req, res, next) => {
     });
     updated_data.deleted_by = user_name?.name || "System";
 
-    const result = await workspace_user.updateOne(
+    const result = await workspace_collections.updateOne(
       { _id: new ObjectId(input_data.id) },
       { $set: updated_data }
     );
