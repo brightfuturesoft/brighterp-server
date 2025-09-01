@@ -7,6 +7,7 @@ const color_router = require('./color/color_router');
 const size_router = require('./size_type/size_router');
 const attribute_router = require('./attribute_set/attribute_router');
 const manufacturer_router = require('./manufacturer/manufacture_router');
+const customer_route = require('./customers/customer_router');
 
 
 // Define module routes
@@ -42,6 +43,10 @@ const modulesRoutes = [
       {
             path: '/size',      // Items routes
             route: size_router,
+      },
+      {
+            path: "/customers",
+            route: customer_route
       }
 ];
 
