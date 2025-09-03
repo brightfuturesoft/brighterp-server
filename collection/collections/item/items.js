@@ -8,6 +8,7 @@ const size_collection = client.db("items").collection("size");
 const attribute_collection = client.db("items").collection("attribute");
 const manufacturer_collection = client.db("items").collection("manufacturer");
 const workspace_collections = client.db("items").collection("workspace_user");
+const orders_collection = client.db("items").collection("orders");
 
 module.exports = {
   item_collection,
@@ -18,4 +19,5 @@ module.exports = {
   attribute_collection,
   manufacturer_collection,
   workspace_collections,
+  orders_collection,
 };
