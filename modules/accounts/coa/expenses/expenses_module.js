@@ -1,4 +1,4 @@
-// src/api/v1/utils/crudFactory.js
+
 const { ObjectId } = require("mongodb");
 const { enrichData, response_sender } = require("../../../hooks/data_update");
 const { workspace_collection, user_collection } = require("../../../../collection/collections/auth");
@@ -10,7 +10,6 @@ const expenses_module = (collection, entityName) => {
       try {
         const workspace_id = req.headers.workspace_id;
 
-        // Workspace check
         const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
         if (!check_workspace) {
           return response_sender({
@@ -36,7 +35,7 @@ const expenses_module = (collection, entityName) => {
       }
     },
 
-    // ✅ CREATE
+    // CREATE
     create: async (req, res, next) => {
       try {
         const input_data = req.body;
@@ -50,23 +49,6 @@ const expenses_module = (collection, entityName) => {
             error: true,
             data: null,
             message: "Workspace not found",
-          });
-        }
-
-        // Prevent duplicates
-        const find_item = await collection.findOne({
-          ac_name: input_data.ac_name,
-          workspace_id,
-          delete: { $ne: true },
-        });
-
-        if (find_item) {
-          return response_sender({
-            res,
-            status_code: 400,
-            error: true,
-            data: null,
-            message: "Account already exists.",
           });
         }
 
@@ -90,7 +72,7 @@ const expenses_module = (collection, entityName) => {
       }
     },
 
-    //  UPDATE
+    // UPDATE
     update: async (req, res, next) => {
       try {
         const input_data = req.body;
@@ -104,23 +86,6 @@ const expenses_module = (collection, entityName) => {
             error: true,
             data: null,
             message: "Workspace not found",
-          });
-        }
-
-        // Prevent duplicates
-        const find_item = await collection.findOne({
-          ac_name: input_data.ac_name,
-          _id: { $ne: new ObjectId(input_data.id) },
-          delete: { $ne: true },
-        });
-
-        if (find_item) {
-          return response_sender({
-            res,
-            status_code: 400,
-            error: true,
-            data: null,
-            message: "Account already exists.",
           });
         }
 
@@ -140,6 +105,42 @@ const expenses_module = (collection, entityName) => {
           error: false,
           data: result,
           message: `${entityName} updated successfully.`,
+        });
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    // delete function
+    delete: async (req, res, next) => {
+      try {
+        const { id } = req.body;
+        const workspace_id = req.headers.workspace_id;
+
+        const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
+        if (!check_workspace) {
+          return response_sender({
+            res,
+            status_code: 404,
+            error: true,
+            data: null,
+            message: "Workspace not found",
+          });
+        }
+
+        const user_name = await user_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
+
+        const result = await collection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { delete: true, deleted_by: user_name?.name || "System", deleted_at: new Date() } }
+        );
+
+        return response_sender({
+          res,
+          status_code: 200,
+          error: false,
+          data: result,
+          message: `${entityName} deleted successfully.`,
         });
       } catch (error) {
         next(error);
