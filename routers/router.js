@@ -4,7 +4,10 @@ const image_router = require('../modules/image/image_router');  // Adjust the pa
 const initial_route = require('../modules/hooks/initial_route'); // Adjust the path if necessary
 const auth_router = require('../modules/auth/auth_router'); // Adjust the path if necessary
 const item_router = require('../modules/items/item_router'); // Adjust the path if necessary
-const coa_router=require('../modules/accounts/coa/coa_router')
+const coa_router=require('../modules/accounts/coa/coa_router');
+const transaction_route=require('../modules/accounts/transaction/transaction_route');
+// const transaction_router=require('../modules/accounts/transaction/transaction_route');
+
 
 // Define module routes
 const modulesRoutes = [
@@ -27,7 +30,12 @@ const modulesRoutes = [
       {
             path:"/coa",
             route: coa_router,
+      },
+      {
+            path:"/transaction",
+            route: transaction_route,
       }
+      
 ];
 
 // Attach each route to the main router
