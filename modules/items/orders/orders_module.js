@@ -9,6 +9,9 @@ const {
 const {
   orders_collection,
 } = require("../../../collection/collections/item/items");
+const {
+  counters_collection,
+} = require("../../../collection/collections/counter/counter");
 
 // 🔹 Create Order
 const create_order = async (req, res, next) => {
@@ -200,56 +203,33 @@ const delete_order = async (req, res, next) => {
 // 🔹 API: Generate TransactionId
 const get_transaction_id = async (req, res, next) => {
   try {
-    const workspace_id = req.headers.workspace_id;
+    const { workspace_id } = req.headers;
     const { shopName } = req.query;
 
-    if (!workspace_id) {
+    if (!workspace_id || !shopName) {
       return response_sender({
         res,
         status_code: 400,
         error: true,
-        data: null,
-        message: "workspace id is required",
+        message: "workspace_id and shopName are required",
       });
     }
 
-    // ✅ Validate workspace
-    const check_workspace = await workspace_collection.findOne({
-      _id: new ObjectId(workspace_id),
-    });
-    if (!check_workspace) {
-      return response_sender({
-        res,
-        status_code: 404,
-        error: true,
-        data: null,
-        message: "Workspace not found",
-      });
-    }
+    // ✅ Atomically increment counter
+    const counter = await counters_collection.findOneAndUpdate(
+      { workspace_id, shopName },
+      { $inc: { lastNumber: 1 } },
+      { upsert: true, returnDocument: "after" }
+    );
 
-    // ✅ Find last order for this shop
-    const lastOrder = await orders_collection
-      .find({ workspace_id, shopName })
-      .sort({ createAt: -1 })
-      .limit(1)
-      .toArray();
-
-    let nextNumber = 1;
-    if (lastOrder.length > 0) {
-      const lastTxId = lastOrder[0].transactionId;
-      const parts = lastTxId.split("-");
-      const lastNum = parseInt(parts[parts.length - 1]) || 0;
-      nextNumber = lastNum + 1;
-    }
-
-    const transactionId = `${shopName}-${nextNumber}`;
+    const transactionId = `${shopName}-${counter.lastNumber}`;
 
     return response_sender({
       res,
       status_code: 200,
       error: false,
       data: { transactionId },
-      message: "TransactionId generated successfully.",
+      message: "TransactionId generated successfully",
     });
   } catch (error) {
     next(error);
