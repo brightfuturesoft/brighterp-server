@@ -24,32 +24,33 @@ const get_journals = async (req, res, next) => {
     next(error);
   }
 };
-// // Get single journal
-// const get_journal = async (req, res, next) => {
-//   try {
-//     const workspace_id = req.headers.workspace_id;
-//     const { id } = req.params;
+// Get single journal
+const get_journal = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const workspace_id = req.headers.workspace_id;
 
-//     if (!id) return res.status(400).json({ error: true, message: "Journal ID required" });
+    if (!id) return res.status(400).json({ error: true, message: "Journal ID required" });
 
-//     const journal = await journal_collection.findOne({ _id: new ObjectId(id), workspace_id });
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ error: true, message: "Invalid Journal ID" });
+    }
 
-//     if (!journal) {
-//       return res.status(404).json({ error: true, message: "Journal not found" });
-//     }
+    const journal = await journal_collection.findOne({ _id: new ObjectId(id), workspace_id });
 
-//     return response_sender({
-//       res,
-//       status_code: 200,
-//       error: false,
-//       data: journal,
-//       message: "Journal fetched successfully.",
-//     });
-//   } catch (err) {
-//     next(err);
-//   }
-// };
+    if (!journal) return res.status(404).json({ error: true, message: "Journal not found" });
 
+    return response_sender({
+      res,
+      status_code: 200,
+      error: false,
+      data: journal,
+      message: "Journal fetched successfully.",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
 // Create a journal
 const create_journal = async (req, res, next) => {
@@ -140,4 +141,4 @@ const delete_journal = async (req, res, next) => {
   }
 };
 
-module.exports = { create_journal, get_journals, update_journal, delete_journal };
+module.exports = { create_journal, get_journals, update_journal, delete_journal, get_journal };
