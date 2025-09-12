@@ -4,7 +4,23 @@ const { response_sender } = require("./respose_sender");
 
 const check_user = async (req, res, next) => {
       try {
-            const user_id = req.headers.authorization;
+            // Extract token from Authorization header (Bearer token)
+            const authHeader = req.headers.authorization;
+            if (!authHeader) {
+                  return response_sender({
+                        res,
+                        status_code: 401,
+                        error: true,
+                        data: null,
+                        message: "Unauthorized",
+                  });
+            }
+            // Assuming Bearer token format: "Bearer <token>"
+            const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+
+            // Validate token as user_id (or decode token if JWT)
+            const user_id = token;
+
             if (!user_id) {
                   return response_sender({
                         res,
@@ -24,6 +40,8 @@ const check_user = async (req, res, next) => {
                         message: "User not found.",
                   });
             }
+            // Attach user object to req.user for downstream use
+            req.user = user_validation;
             next();
       }
       catch (error) {
