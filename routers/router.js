@@ -32,7 +32,7 @@ const modulesRoutes = [
             route: coa_router,
       },
       {
-            path: '/settings',      // Settings routes
+            path: '/settings',      // Consolidated settings routes
             route: settings_router,
       },
 ];
