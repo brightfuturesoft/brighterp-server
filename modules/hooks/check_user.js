@@ -11,7 +11,7 @@ const check_user = async (req, res, next) => {
                         status_code: 401,
                         error: true,
                         data: null,
-                        message: "Unauthorized",
+                        message: "User Token is required.",
                   });
             }
             const user_validation = await user_collection.findOne({ _id: new ObjectId(user_id) });
@@ -21,7 +21,7 @@ const check_user = async (req, res, next) => {
                         status_code: 401,
                         error: true,
                         data: null,
-                        message: "Unauthorized",
+                        message: "User not found.",
                   });
             }
             next();
