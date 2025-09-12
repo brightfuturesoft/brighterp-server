@@ -24,9 +24,9 @@ const get_category = async (req, res, next) => {
                   { $match: { workspace_id, delete: { $ne: true } } },
                   {
                         $lookup: {
-                              from: "product_collection", // Change to your actual product collection name
+                              from: "product_collection",
                               localField: "_id",
-                              foreignField: "category_id", // Make sure this is the field in product referencing category
+                              foreignField: "category_id", 
                               as: "products"
                         }
                   },
@@ -37,7 +37,7 @@ const get_category = async (req, res, next) => {
                   },
                   {
                         $project: {
-                              products: 0 // Remove products array, only keep itemCount
+                              products: 0 
                         }
                   }
             ]).toArray();
