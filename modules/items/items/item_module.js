@@ -15,7 +15,6 @@ const get_item = async (req, res, next) => {
     const workspace_id = req.headers.workspace_id;
     const { item_type } = req.query;
 
-    // ✅ Validate workspace
     const check_workspace = await workspace_collection.findOne({
       _id: new ObjectId(workspace_id),
     });
@@ -30,7 +29,6 @@ const get_item = async (req, res, next) => {
       });
     }
 
-    // ✅ Build filter
     const filter = {
       workspace_id,
       delete: { $ne: true }, // exclude deleted items

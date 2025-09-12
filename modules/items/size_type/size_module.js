@@ -45,7 +45,7 @@ const create_size = async (req, res, next) => {
                         message: "Workspace not found",
                   });
             }
-            const find_size = await size_collection.findOne({ code: input_data.code });
+            const find_size = await size_collection.findOne({ addedType: input_data.added_type });
             if (find_size) {
                   return response_sender({
                         res,
