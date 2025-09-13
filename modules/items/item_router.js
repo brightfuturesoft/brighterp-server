@@ -42,7 +42,8 @@ const modulesRoutes = [
       {
             path: '/size',      // Items routes
             route: size_router,
-      }
+      },
+
 ];
 
 // Attach each route to the main router

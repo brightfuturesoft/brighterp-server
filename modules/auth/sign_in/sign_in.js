@@ -1,114 +1,159 @@
 const { ObjectId } = require("mongodb");
-const crypto = require('crypto');
-const bcrypt = require('bcrypt');
+const crypto = require("crypto");
+const bcrypt = require("bcrypt");
 const { response_sender } = require("../../hooks/respose_sender");
 const { user_collection, workspace_collection } = require("../../../collection/collections/auth");
+const send_email = require("../../../mail/send_email");
 
-const ENCRYPTION_KEY = process.env.COOKIE_SECRET_KEY || '12345678901234567890123456789012'; // Replace with env variable in production!
-const IV_LENGTH = 16; // AES block size for CBC mode
+const ENCRYPTION_KEY = process.env.COOKIE_SECRET_KEY || "12345678901234567890123456789012"; // Replace with env variable in production!
+const IV_LENGTH = 16;
+const OTP_EXPIRY = 5 * 60 * 1000;
 
+// --- Encryption helpers ---
 function encrypt(text) {
-      let iv = crypto.randomBytes(IV_LENGTH);
-      let cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv);
-      let encrypted = cipher.update(text, 'utf8');
-      encrypted = Buffer.concat([encrypted, cipher.final()]);
-      return iv.toString('hex') + ':' + encrypted.toString('hex');
+  let iv = crypto.randomBytes(IV_LENGTH);
+  let cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(ENCRYPTION_KEY), iv);
+  let encrypted = cipher.update(text, "utf8");
+  encrypted = Buffer.concat([encrypted, cipher.final()]);
+  return iv.toString("hex") + ":" + encrypted.toString("hex");
 }
 
 function decrypt(encryptedText) {
-      let [ivHex, encryptedHex] = encryptedText.split(':');
-      let iv = Buffer.from(ivHex, 'hex');
-      let encrypted = Buffer.from(encryptedHex, 'hex');
-      let decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv);
-      let decrypted = decipher.update(encrypted, undefined, 'utf8');
-      decrypted += decipher.final('utf8');
-      return decrypted;
+  let [ivHex, encryptedHex] = encryptedText.split(":");
+  let iv = Buffer.from(ivHex, "hex");
+  let encrypted = Buffer.from(encryptedHex, "hex");
+  let decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(ENCRYPTION_KEY), iv);
+  let decrypted = decipher.update(encrypted, undefined, "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
 }
 
+// --- Auth Controllers ---
+
 const sign_in = async (req, res, next) => {
-      try {
-            const input_data = req.body;
+  try {
+    const input_data = req.body;
 
-            // Validate that necessary fields are present
-            if (!input_data.email || !input_data.password) {
-                  return response_sender({
-                        res,
-                        status_code: 400,
-                        error: true,
-                        data: null,
-                        message: "Email and password are required.",
-                  });
-            }
+    if (!input_data.email || !input_data.password) {
+      return response_sender({
+        res,
+        status_code: 400,
+        error: true,
+        data: null,
+        message: "Email and password are required.",
+      });
+    }
 
-            // Find the user by email
-            const find_user = await user_collection.findOne({ email: input_data.email });
+    const find_user = await user_collection.findOne({ email: input_data.email });
+    if (!find_user) {
+      return response_sender({
+        res,
+        status_code: 400,
+        error: true,
+        data: null,
+        message: "Email is not registered.",
+      });
+    }
 
-            if (!find_user) {
-                  return response_sender({
-                        res,
-                        status_code: 400,
-                        error: true,
-                        data: null,
-                        message: "Email is not registered.",
-                  });
-            }
+    const isPasswordValid = await bcrypt.compare(input_data.password, find_user.password);
+    if (!isPasswordValid) {
+      return response_sender({
+        res,
+        status_code: 401,
+        error: true,
+        data: null,
+        message: "Password is incorrect. Please try again.",
+      });
+    }
 
-            const isPasswordValid = await bcrypt.compare(input_data.password, find_user.password);
-            if (!isPasswordValid) {
-                  return response_sender({
-                        res,
-                        status_code: 401,
-                        error: true,
-                        data: null,
-                        message: "Password is incorrect. Please try again.",
-                  });
-            }
+    const workspace = await workspace_collection.findOne({ _id: new ObjectId(find_user.workspace_id) });
+    const { password, ...userData } = find_user;
 
-
-            // If the user is found and the password is valid, fetch the workspace
-            const workspace = await workspace_collection.findOne({ _id: new ObjectId(find_user.workspace_id) });
-
-            // Remove password from user data
-            const { password, ...userData } = find_user;
-
-            return response_sender({
-                  res,
-                  status_code: 200,
-                  error: false,
-                  data: {
-                        user: userData,
-                        workspace
-                  },
-                  message: "User signed in successfully.",
-            });
-
-      } catch (error) {
-            next(error);
-      }
+    return response_sender({
+      res,
+      status_code: 200,
+      error: false,
+      data: { user: userData, workspace },
+      message: "User signed in successfully.",
+    });
+  } catch (error) {
+    next(error);
+  }
 };
-
-
 
 const sign_out = async (req, res, next) => {
-
-
-
-      try {
-            res.clearCookie('erp_user');
-            res.clearCookie('erp_workspace');
-            return response_sender({
-                  res,
-                  status_code: 200,
-                  error: false,
-                  data: null,
-                  message: "User signed out successfully.",
-            });
-
-      } catch (error) {
-            next(error);
-      }
+  try {
+    res.clearCookie("erp_user");
+    res.clearCookie("erp_workspace");
+    return response_sender({
+      res,
+      status_code: 200,
+      error: false,
+      data: null,
+      message: "User signed out successfully.",
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
+// Return current user and workspace using Authorization header as user_id
+const me = async (req, res, next) => {
+  try {
+    const userId = req.headers.authorization || req.query.user_id;
+    if (!userId) {
+      return response_sender({
+        res,
+        status_code: 401,
+        error: true,
+        data: null,
+        message: "Unauthorized",
+      });
+    }
+    let user;
+    try {
+      user = await user_collection.findOne({ _id: new ObjectId(userId) });
+    } catch (_e) {
+      return response_sender({
+        res,
+        status_code: 400,
+        error: true,
+        data: null,
+        message: "Invalid user id",
+      });
+    }
+    if (!user) {
+      return response_sender({
+        res,
+        status_code: 404,
+        error: true,
+        data: null,
+        message: "User not found",
+      });
+    }
+    const workspace = user.workspace_id
+      ? await workspace_collection.findOne({ _id: new ObjectId(user.workspace_id) })
+      : null;
+    const { password, ...userData } = user;
+    return response_sender({
+      res,
+      status_code: 200,
+      error: false,
+      data: { user: userData, workspace },
+      message: "Current user",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+
 module.exports = {
-      sign_in, sign_out
+  sign_in,
+  sign_out,
+  me,
+  
+  
 };
