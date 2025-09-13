@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
+const ecommerce_router = require('../modules/ecommerce/ecommerce_route'); 
 const image_router = require('../modules/image/image_router');  // Adjust the path if necessary
 const initial_route = require('../modules/hooks/initial_route'); // Adjust the path if necessary
 const auth_router = require('../modules/auth/auth_router'); // Adjust the path if necessary
@@ -11,9 +12,9 @@ const settings_router = require('../modules/settings/settings_router');
 const customers_order_router = require('../modules/customers_orders/customers_order_router');
 const customers_router = require('../modules/customers/customers_router');
 
-// Define module routes
+
 const modulesRoutes = [
-      {
+      {      
             path: '/',        
             route: initial_route,
       },
@@ -30,6 +31,10 @@ const modulesRoutes = [
             route: item_router,
       },
       {
+            path:'/ecommerce',
+            route:ecommerce_router
+      },
+     {
             path: "/coa",
             route: coa_router,
       },
@@ -51,7 +56,5 @@ const modulesRoutes = [
       },
 ];
 
-// Attach each route to the main router
 modulesRoutes.forEach(route => router.use(route.path, route.route));
-
 module.exports = router;
