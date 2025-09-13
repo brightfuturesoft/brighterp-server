@@ -2,7 +2,6 @@ const express = require('express');
 const { check_user } = require('../../../hooks/check_user');
 const expenses_route = (entityName, crudController) => {
   const router = express.Router();
-  const entity = entityName.toLowerCase();
 
   // Routes
   router.post(`/create-${entityName}`, check_user, crudController.create);
