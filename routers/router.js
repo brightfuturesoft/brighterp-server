@@ -5,6 +5,7 @@ const image_router = require('../modules/image/image_router');  // Adjust the pa
 const initial_route = require('../modules/hooks/initial_route'); // Adjust the path if necessary
 const auth_router = require('../modules/auth/auth_router'); // Adjust the path if necessary
 const item_router = require('../modules/items/item_router'); // Adjust the path if necessary
+const transaction_route=require('../modules/accounts/transaction/transaction_route');
 const coa_router = require('../modules/accounts/coa/coa_router')
 const settings_router = require('../modules/settings/settings_router');
 const customers_order_router = require('../modules/customers_orders/customers_order_router');
@@ -13,19 +14,19 @@ const customers_router = require('../modules/customers/customers_router');
 // Define module routes
 const modulesRoutes = [
       {
-            path: '/',         // Default path
+            path: '/',        
             route: initial_route,
       },
       {
-            path: '/image',    // Image routes
+            path: '/image',    
             route: image_router,
       },
       {
-            path: '/auth',      // Auth routes
+            path: '/auth',      
             route: auth_router,
       },
       {
-            path: '/items',      // Items routes
+            path: '/items',      
             route: item_router,
       },
       {
@@ -33,15 +34,19 @@ const modulesRoutes = [
             route: coa_router,
       },
       {
-            path: '/settings',      // Consolidated settings routes
+            path:"/transaction",
+            route: transaction_route,
+      },
+      {
+            path: '/settings',     
             route: settings_router,
       },
       {
-            path: '/customers-order',      // Settings routes
+            path: '/customers-order',      
             route: customers_order_router,
       },
       {
-            path: '/customers',      // Settings routes
+            path: '/customers',     
             route: customers_router,
       },
 ];
