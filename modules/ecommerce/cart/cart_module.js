@@ -1,12 +1,11 @@
 const { ObjectId } = require("mongodb");
-const { order_collection } = require("../../../collection/collections/ecommerce/ecommerce");
-const { workspace_collection } = require("../../../collection/collections/auth");
 const { enrichData } = require("../../hooks/data_update");
 const { response_sender } = require("../../hooks/respose_sender");
+const { workspace_collection } = require("../../../collection/collections/auth");
+const { carts_collection } = require("../../../collection/collections/ecommerce/ecommerce");
 
-
-// GET Orders
-const get_order = async (req, res, next) => {
+// GET Cart Items
+const get_cart = async (req, res, next) => {
   try {
     const workspace_id = req.headers.workspace_id;
     const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
@@ -19,25 +18,26 @@ const get_order = async (req, res, next) => {
         message: "Workspace not found",
       });
     }
-    const orders = await order_collection.find({ workspace_id, delete: { $ne: true } }).toArray();
+
+    const cart_items = await carts_collection.find({ workspace_id, delete: { $ne: true } }).toArray();
     return response_sender({
       res,
       status_code: 200,
       error: false,
-      data: orders,
-      message: "Orders fetched successfully.",
+      data: cart_items,
+      message: "Cart items fetched successfully.",
     });
   } catch (error) {
     next(error);
   }
 };
 
-
-// CREATE Order
-const create_order = async (req, res, next) => {
+// CREATE Cart Item
+const create_cart_item = async (req, res, next) => {
   try {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
+
     const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
     if (!check_workspace) {
       return response_sender({
@@ -48,29 +48,32 @@ const create_order = async (req, res, next) => {
         message: "Workspace not found",
       });
     }
+
     let updated_data = enrichData(input_data);
     updated_data.workspace_id = workspace_id;
-    const user_name = await user_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
+
+    const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
     updated_data.created_by = user_name?.name || "Unknown";
-    const result = await order_collection.insertOne(updated_data);
+
+    const result = await carts_collection.insertOne(updated_data);
     return response_sender({
       res,
       status_code: 200,
       error: false,
       data: result,
-      message: "Order created successfully.",
+      message: "Cart item created successfully.",
     });
   } catch (error) {
     next(error);
   }
 };
 
-
-// UPDATE Order
-const update_order = async (req, res, next) => {
+// UPDATE Cart Item
+const update_cart_item = async (req, res, next) => {
   try {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
+
     const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
     if (!check_workspace) {
       return response_sender({
@@ -84,30 +87,33 @@ const update_order = async (req, res, next) => {
 
     let updated_data = enrichData(input_data);
     updated_data.workspace_id = workspace_id;
-    const user_name = await order_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
+
+    const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
     updated_data.updated_by = user_name?.name || "Unknown";
-    const result = await order_collection.updateOne(
+
+    const result = await carts_collection.updateOne(
       { _id: new ObjectId(input_data.id) },
       { $set: updated_data }
     );
+
     return response_sender({
       res,
       status_code: 200,
       error: false,
       data: result,
-      message: "Order updated successfully.",
+      message: "Cart item updated successfully.",
     });
   } catch (error) {
     next(error);
   }
 };
 
-
-// DELETE Order (soft delete)
-const delete_order = async (req, res, next) => {
+// DELETE Cart Item (soft delete)
+const delete_cart_item = async (req, res, next) => {
   try {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
+
     const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
     if (!check_workspace) {
       return response_sender({
@@ -118,63 +124,35 @@ const delete_order = async (req, res, next) => {
         message: "Workspace not found",
       });
     }
+
     let updated_data = enrichData(input_data);
-    const user_name = await order_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
-    updated_data.updated_by = user_name?.name || "Unknown";
-    delete updated_data._id;
     updated_data.delete = true;
-    const result = await order_collection.updateOne(
+
+    const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
+    updated_data.updated_by = user_name?.name || "Unknown";
+
+    delete updated_data._id;
+
+    const result = await carts_collection.updateOne(
       { _id: new ObjectId(input_data.id) },
       { $set: updated_data }
     );
+
     return response_sender({
       res,
       status_code: 200,
       error: false,
       data: result,
-      message: "Order deleted successfully.",
+      message: "Cart item deleted successfully.",
     });
   } catch (error) {
     next(error);
   }
 };
 
-const get_workspace = async (req, res, next) => {
-  try {
-    const workspace_id = req.headers.workspace_id;
-
-    if (!workspace_id) {
-      return response_sender({
-        res,
-        status_code: 400,
-        error: true,
-        data: null,
-        message: "workspace_id is required in headers",
-      });
-    }
-
-    const workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
-
-    if (!workspace) {
-      return response_sender({
-        res,
-        status_code: 404,
-        error: true,
-        data: null,
-        message: "Workspace not found",
-      });
-    }
-
-    return response_sender({
-      res,
-      status_code: 200,
-      error: false,
-      data: workspace,
-      message: "Workspace fetched successfully.",
-    });
-  } catch (error) {
-    next(error);
-  }
+module.exports = {
+  get_cart,
+  create_cart_item,
+  update_cart_item,
+  delete_cart_item
 };
-
-module.exports = { create_order, get_order, update_order, delete_order, get_workspace };
