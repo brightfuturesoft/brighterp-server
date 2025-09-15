@@ -3,6 +3,7 @@ const router = express.Router();
 const order_router = require('./orders/order_route');
 const coustomer_router = require('./customers/customers_route');
 const carts_router = require('./cart/cart_route');
+const banners_router = require('./banners/banners_route');
 
 const modules_Routes = [
       {
@@ -15,6 +16,9 @@ const modules_Routes = [
       {
             path:'/carts',
             route:carts_router
+      },{
+            path:"/banners",
+            route:banners_router
       }
 ];
 
