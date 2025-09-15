@@ -5,6 +5,8 @@ const coustomer_router = require('./customers/customers_route');
 const carts_router = require('./cart/cart_route');
 const banners_router = require('./banners/banners_route');
 const contacts_router = require('./contact/contact_route');
+const blogs_router = require('./blogs/blogs_route');
+const blogs_category = require('./blog_category/blog_category_route');
 
 const modules_Routes = [
       {
@@ -23,6 +25,13 @@ const modules_Routes = [
       },{
             path:"/contacts",
             route:contacts_router
+      },{
+            path:'/blogs',
+            route:blogs_router
+      },{
+            path:'/blog-category',
+            route:blogs_category
+
       }
 ];
 
