@@ -38,7 +38,6 @@ const create_banner = async (req, res, next) => {
   try {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
-
     const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
     if (!check_workspace) {
       return response_sender({
@@ -52,7 +51,6 @@ const create_banner = async (req, res, next) => {
 
     let updated_data = enrichData(input_data);
     updated_data.workspace_id = workspace_id;
-
     const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
     updated_data.created_by = user_name?.name || "Unknown";
 

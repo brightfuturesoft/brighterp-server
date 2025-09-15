@@ -64,37 +64,16 @@ const get_image_by_id = async (req, res, next) => {
       try {
             let imageId = req.params.id;
             imageId = imageId.replace(/\.[^/.]+$/, "");
-
             const imageDoc = await image_collection.findOne({
                   _id: new ObjectId(imageId),
             });
-
             if (!imageDoc) {
-                  return res.status(404).json({ error: "Image not found" });
+                  res.status(404).json({ error: "Image not found" });
+            } else {
+                  res.contentType("image/jpeg");
+                  const imageBuffer = Buffer.from(imageDoc.image.buffer, "base64");
+                  res.status(200).send(imageBuffer);
             }
-
-            // Determine content type from the image buffer
-            // Since we're using sharp, we can detect the format or use a default
-            const imageBuffer = imageDoc.image;
-            let contentType = "image/jpeg"; // Default
-
-            // Try to detect format from buffer (simple detection)
-            if (imageBuffer.length > 0) {
-                  if (imageBuffer[0] === 0xFF && imageBuffer[1] === 0xD8) {
-                        contentType = "image/jpeg";
-                  } else if (imageBuffer[0] === 0x89 && imageBuffer[1] === 0x50) {
-                        contentType = "image/png";
-                  } else if (imageBuffer[0] === 0x47 && imageBuffer[1] === 0x49) {
-                        contentType = "image/gif";
-                  }
-            }
-
-            res.set({
-                  'Content-Type': contentType,
-                  'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
-            });
-
-            res.status(200).send(imageBuffer);
       } catch (err) {
             next(err);
       }
