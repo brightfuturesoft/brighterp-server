@@ -8,6 +8,7 @@ const contacts_router = require('./contact/contact_route');
 const blogs_router = require('./blogs/blogs_route');
 const blogs_category = require('./blog_category/blog_category_route');
 const coupon_router = require('./coupon/coupon_route');
+const policy_router = require('./policy/policy_route');
 
 const modules_Routes = [
       {
@@ -35,6 +36,9 @@ const modules_Routes = [
       },{
             path:'/coupon',
             route:coupon_router
+      },{
+            path:'/policy',
+            route:policy_router
       }
 ];
 
