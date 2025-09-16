@@ -6,7 +6,7 @@ const auth_router = require('../modules/auth/auth_router'); // Adjust the path i
 const item_router = require('../modules/items/item_router'); // Adjust the path if necessary
 const coa_router=require('../modules/accounts/coa/coa_router');
 const transaction_route=require('../modules/accounts/transaction/transaction_route');
-// const transaction_router=require('../modules/accounts/transaction/transaction_route');
+const hrm_route=require('../modules/hrm/hrm_route');
 
 
 // Define module routes
@@ -34,6 +34,10 @@ const modulesRoutes = [
       {
             path:"/transaction",
             route: transaction_route,
+      },
+      {
+            path:"/hrm",
+            route: hrm_route,  
       }
       
 ];

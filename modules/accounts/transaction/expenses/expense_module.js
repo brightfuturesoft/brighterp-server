@@ -89,31 +89,121 @@ const update_expense = async (req, res, next) => {
   try {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
+    
+    // Validation
+    if (!input_data.id) {
+      return response_sender({
+        res,
+        status_code: 400,
+        error: true,
+        message: "Expense ID is required.",
+      });
+    }
+    
+    if (!ObjectId.isValid(input_data.id)) {
+      return response_sender({
+        res,
+        status_code: 400,
+        error: true,
+        message: "Invalid expense ID format.",
+      });
+    }
+    
+    if (!ObjectId.isValid(req.headers.authorization)) {
+      return response_sender({
+        res,
+        status_code: 400,
+        error: true,
+        message: "Invalid user ID.",
+      });
+    }
 
+    if (!workspace_id) {
+      return response_sender({
+        res,
+        status_code: 400,
+        error: true,
+        message: "Workspace ID is required.",
+      });
+    }
+
+    // Prepare update data
     let updated_data = enrichData(input_data);
     updated_data.workspace_id = workspace_id;
-
+    
+    // Get user for audit trail
     const user = await user_collection.findOne({
       _id: new ObjectId(req.headers.authorization),
     });
+    
+    if (!user) {
+      return response_sender({
+        res,
+        status_code: 404,
+        error: true,
+        message: "User not found.",
+      });
+    }
+    
     updated_data.updated_by = user?.name || "Unknown";
-
+    updated_data.updated_at = new Date();
+    
+    // Remove the id from update data to avoid conflicts
+    delete updated_data.id;
+    
+    // Update the expense with proper filter
     const result = await expense_collection.updateOne(
-      { _id: new ObjectId(input_data.id) },
+      { 
+        _id: new ObjectId(input_data.id), 
+        workspace_id: workspace_id 
+      },
       { $set: updated_data }
     );
-
+    
+    if (result.matchedCount === 0) {
+      return response_sender({
+        res,
+        status_code: 404,
+        error: true,
+        message: "Expense not found or access denied.",
+      });
+    }
+    
+    if (result.modifiedCount === 0) {
+      return response_sender({
+        res,
+        status_code: 200,
+        error: false,
+        message: "No changes were made to the expense.",
+        data: { matchedCount: result.matchedCount, modifiedCount: result.modifiedCount }
+      });
+    }
+    
+    // Fetch and return updated expense
+    const updatedExpense = await expense_collection.findOne({
+      _id: new ObjectId(input_data.id),
+      workspace_id: workspace_id
+    });
+    
     return response_sender({
       res,
       status_code: 200,
       error: false,
-      data: result,
+      data: updatedExpense,
       message: "Expense updated successfully.",
     });
+    
   } catch (error) {
-    next(error);
+    console.error("Error updating expense:", error);
+    return response_sender({
+      res,
+      status_code: 500,
+      error: true,
+      message: "Internal server error while updating expense.",
+    });
   }
 };
+
 
 // Delete expense (soft delete)
 const delete_expense = async (req, res, next) => {
