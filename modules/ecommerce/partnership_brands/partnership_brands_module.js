@@ -2,13 +2,13 @@ const { ObjectId } = require("mongodb");
 const { enrichData } = require("../../hooks/data_update");
 const { response_sender } = require("../../hooks/respose_sender");
 const { workspace_collection } = require("../../../collection/collections/auth");
-const { policy_collection } = require("../../../collection/collections/ecommerce/ecommerce");
+const { partnership_brand_collection } = require("../../../collection/collections/ecommerce/ecommerce");
 
-
-// GET Policies
-const get_policies = async (req, res, next) => {
+// GET Brands
+const get_brands = async (req, res, next) => {
   try {
     const workspace_id = req.headers.workspace_id;
+
     const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
     if (!check_workspace) {
       return response_sender({
@@ -20,21 +20,21 @@ const get_policies = async (req, res, next) => {
       });
     }
 
-    const policies = await policy_collection.find({ workspace_id, delete: { $ne: true } }).toArray();
+    const brands = await partnership_brand_collection.find({ workspace_id, delete: { $ne: true } }).toArray();
     return response_sender({
       res,
       status_code: 200,
       error: false,
-      data: policies,
-      message: "Policies fetched successfully.",
+      data: brands,
+      message: "Brands fetched successfully.",
     });
   } catch (error) {
     next(error);
   }
 };
 
-// CREATE Policy
-const create_policy = async (req, res, next) => {
+// CREATE Brand
+const create_brand = async (req, res, next) => {
   try {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
@@ -56,22 +56,22 @@ const create_policy = async (req, res, next) => {
     const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
     updated_data.created_by = user_name?.name || "Unknown";
 
-    const result = await policy_collection.insertOne(updated_data);
+    const result = await partnership_brand_collection.insertOne(updated_data);
 
     return response_sender({
       res,
       status_code: 200,
       error: false,
       data: result,
-      message: "Policy created successfully.",
+      message: "Brand created successfully.",
     });
   } catch (error) {
     next(error);
   }
 };
 
-// UPDATE Policy
-const update_policy = async (req, res, next) => {
+// UPDATE Brand
+const update_brand = async (req, res, next) => {
   try {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
@@ -93,7 +93,7 @@ const update_policy = async (req, res, next) => {
     const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
     updated_data.updated_by = user_name?.name || "Unknown";
 
-    const result = await policy_collection.updateOne(
+    const result = await partnership_brand_collection.updateOne(
       { _id: new ObjectId(input_data.id) },
       { $set: updated_data }
     );
@@ -103,15 +103,15 @@ const update_policy = async (req, res, next) => {
       status_code: 200,
       error: false,
       data: result,
-      message: "Policy updated successfully.",
+      message: "Brand updated successfully.",
     });
   } catch (error) {
     next(error);
   }
 };
 
-// DELETE Policy (soft delete)
-const delete_policy = async (req, res, next) => {
+// DELETE Brand (soft delete)
+const delete_brand = async (req, res, next) => {
   try {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
@@ -135,7 +135,7 @@ const delete_policy = async (req, res, next) => {
 
     delete updated_data._id;
 
-    const result = await policy_collection.updateOne(
+    const result = await partnership_brand_collection.updateOne(
       { _id: new ObjectId(input_data.id) },
       { $set: updated_data }
     );
@@ -145,7 +145,7 @@ const delete_policy = async (req, res, next) => {
       status_code: 200,
       error: false,
       data: result,
-      message: "Policy deleted successfully.",
+      message: "Brand deleted successfully.",
     });
   } catch (error) {
     next(error);
@@ -153,8 +153,8 @@ const delete_policy = async (req, res, next) => {
 };
 
 module.exports = {
-  get_policies,
-  create_policy,
-  update_policy,
-  delete_policy,
+  get_brands,
+  create_brand,
+  update_brand,
+  delete_brand,
 };
