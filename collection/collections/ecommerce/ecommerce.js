@@ -14,6 +14,6 @@ const link_integration_collection = client.db('ecommerce').collection("link_inti
 const custom_sections_collection = client.db('ecommerce').collection("custom_section");
 const promotions_collection = client.db('ecommerce').collection("promotions");
 const questions_collection = client.db('ecommerce').collection("questions");
-const wishlist_collection = client.db('ecommerce').collection("wishlist");
+const wishlists_collection = client.db('ecommerce').collection("wishlist");
 
-module.exports = { order_collection, customers_collection,carts_collection,banners_collection, contact_collection, blog_collection, blog_category_collection,coupon_collection,policy_collection, partnership_brand_collection,link_integration_collection, custom_sections_collection, promotions_collection, questions_collection, wishlist_collection};
+module.exports = { order_collection, customers_collection,carts_collection,banners_collection, contact_collection, blog_collection, blog_category_collection,coupon_collection,policy_collection, partnership_brand_collection,link_integration_collection, custom_sections_collection, promotions_collection, questions_collection, wishlists_collection};

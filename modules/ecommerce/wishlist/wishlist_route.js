@@ -1,5 +1,6 @@
 const express = require('express');
 const { check_user } = require('../../hooks/check_user');
+const { create_wishlist, get_wishlist, update_wishlist, delete_wishlist } = require('./wishlist_module');
 
 
 const router = express.Router();

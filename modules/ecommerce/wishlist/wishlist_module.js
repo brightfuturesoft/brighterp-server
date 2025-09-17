@@ -2,6 +2,7 @@ const { ObjectId } = require("mongodb");
 const { enrichData } = require("../../hooks/data_update");
 const { response_sender } = require("../../hooks/respose_sender");
 const { workspace_collection } = require("../../../collection/collections/auth");
+const { wishlists_collection } = require("../../../collection/collections/ecommerce/ecommerce");
 
 // GET Wishlist
 const get_wishlist = async (req, res, next) => {
@@ -18,7 +19,7 @@ const get_wishlist = async (req, res, next) => {
       });
     }
 
-    const wishlist = await wis.find({ workspace_id, delete: { $ne: true } }).toArray();
+    const wishlist = await wishlists_collection.find({ workspace_id, delete: { $ne: true } }).toArray();
     return response_sender({
       res,
       status_code: 200,
@@ -51,7 +52,7 @@ const create_wishlist = async (req, res, next) => {
     updated_data.workspace_id = workspace_id;
     updated_data.created_by = req.headers.authorization || "Unknown";
 
-    const result = await wishlist_collection.insertOne(updated_data);
+    const result = await wishlists_collection.insertOne(updated_data);
     return response_sender({
       res,
       status_code: 200,
@@ -85,7 +86,7 @@ const update_wishlist = async (req, res, next) => {
     updated_data.updated_by = req.headers.authorization || "Unknown";
     delete updated_data._id;
 
-    const result = await wishlist_collection.updateOne(
+    const result = await wishlists_collection.updateOne(
       { _id: new ObjectId(input_data.id) },
       { $set: updated_data }
     );
@@ -123,7 +124,7 @@ const delete_wishlist = async (req, res, next) => {
     delete updated_data._id;
     updated_data.delete = true;
 
-    const result = await wishlist_collection.updateOne(
+    const result = await wishlists_collection.updateOne(
       { _id: new ObjectId(input_data.id) },
       { $set: updated_data }
     );

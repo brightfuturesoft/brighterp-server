@@ -14,6 +14,7 @@ const link_integration_router = require('./intigration/intigration_route');
 const custom_section_router = require('./custom_section/custom_section_route');
 const promotion_router = require('./promotion/promotion_route');
 const questions_router = require('./questions/question_route');
+const wishlist_router = require('./wishlist/wishlist_route');
 
 const modules_Routes = [
       {
@@ -59,6 +60,9 @@ const modules_Routes = [
       },{
             path:"/questions",
             route:questions_router
+      }, {
+            path:"/wishlist",
+            route:wishlist_router
       }
 ];
 
