@@ -16,6 +16,7 @@ const promotion_router = require('./promotion/promotion_route');
 const questions_router = require('./questions/question_route');
 const wishlist_router = require('./wishlist/wishlist_route');
 const reviews_router = require('./reviews/reviews_route');
+const achivements_router = require('./achivements/achivements_route');
 
 const modules_Routes = [
       {
@@ -67,6 +68,9 @@ const modules_Routes = [
       },{
             path:"/reviews",
             route:reviews_router
+      },{
+            path:"/achivements",
+            route:achivements_router
       }
 ];
 
