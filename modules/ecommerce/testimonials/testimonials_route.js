@@ -6,9 +6,7 @@ const {
   update_testimonial, 
   delete_testimonial 
 } = require('./testimonials_module');
-
 const router = express.Router();
-
 router.post('/create-testimonial', check_user, create_testimonial);
 router.get('/get-testimonials', check_user, get_testimonials);
 router.patch('/update-testimonial', check_user, update_testimonial);
