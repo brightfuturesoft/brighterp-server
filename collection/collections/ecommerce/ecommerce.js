@@ -11,6 +11,7 @@ const coupon_collection = client.db('ecommerce').collection("coupon");
 const policy_collection = client.db('ecommerce').collection("policy");
 const partnership_brand_collection = client.db('ecommerce').collection("partnership_brands");
 const link_integration_collection = client.db('ecommerce').collection("link_intigration");
+const custom_sections_collection = client.db('ecommerce').collection("custom_section");
 
 module.exports = { order_collection, customers_collection,carts_collection,banners_collection, contact_collection, blog_collection, blog_category_collection,
-     coupon_collection,policy_collection, partnership_brand_collection,link_integration_collection};
+     coupon_collection,policy_collection, partnership_brand_collection,link_integration_collection, custom_sections_collection};
