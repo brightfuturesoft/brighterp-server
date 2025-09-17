@@ -12,6 +12,7 @@ const policy_router = require('./policy/policy_route');
 const partnership_brands_router = require('./partnership_brands/parnership_brands_route');
 const link_integration_router = require('./intigration/intigration_route');
 const custom_section_router = require('./custom_section/custom_section_route');
+const promotion_router = require('./promotion/promotion_route');
 
 const modules_Routes = [
       {
@@ -51,6 +52,9 @@ const modules_Routes = [
       },{
             path:"/custom_section",
             route:custom_section_router
+      },{
+            path:"/promotions",
+            route:promotion_router
       }
 ];
 
