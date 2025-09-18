@@ -18,7 +18,10 @@ const wishlist_router = require('./wishlist/wishlist_route');
 const reviews_router = require('./reviews/reviews_route');
 const achivements_router = require('./achivements/achivements_route');
 const newsletter_router = require('./newsletter/newsletter_route');
+const newsletterMail_router = require('./newsletter/newsletterMail_route');
+const testimonials_router = require('./testimonials/testimonials_route');
 const general_seo_router = require('./general_seo/general_seo_route');
+const theme_router = require('./theme/theme_route');
 
 const modules_Routes = [
       {
@@ -82,6 +85,12 @@ const modules_Routes = [
       },{
             path:"/general-seo",
             route:general_seo_router
+      },{
+            path:"/sendmail",
+            route:newsletterMail_router
+      },{
+            path:"/themes",
+            route:theme_router
       }
 ];
 

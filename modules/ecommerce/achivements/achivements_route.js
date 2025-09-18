@@ -1,11 +1,12 @@
 const express = require('express');
 const { check_user } = require('../../hooks/check_user');
-const { 
-  create_achievement, 
-  get_achievements, 
-  update_achievement, 
-  delete_achievement 
-} = require('./achievements_module');
+const { create_achievement, get_achievements, update_achievement, delete_achievement } = require('./achivements_module');
+// const { 
+//   create_achievement, 
+//   get_achievements, 
+//   update_achievement, 
+//   delete_achievement 
+// } = require('./achievements_module');
 
 const router = express.Router();
 

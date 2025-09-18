@@ -2,11 +2,10 @@ const { ObjectId } = require("mongodb");
 const { enrichData } = require("../../hooks/data_update");
 const { response_sender } = require("../../hooks/respose_sender");
 const { workspace_collection } = require("../../../collection/collections/auth");
-const { achievements_collection } = require("../../../collection/collections/ecommerce/ecommerce");
+const { themes_collection } = require("../../../collection/collections/ecommerce/ecommerce");
 
-
-// GET Achievements
-const get_achievements = async (req, res, next) => {
+// GET Themes
+const get_theme = async (req, res, next) => {
   try {
     const workspace_id = req.headers.workspace_id;
     const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
@@ -20,21 +19,21 @@ const get_achievements = async (req, res, next) => {
       });
     }
 
-    const achievements = await achievements_collection.find({ workspace_id, delete: { $ne: true } }).toArray();
+    const themes = await themes_collection.find({ workspace_id, delete: { $ne: true } }).toArray();
     return response_sender({
       res,
       status_code: 200,
       error: false,
-      data: achievements,
-      message: "Achievements fetched successfully.",
+      data: themes,
+      message: "Themes fetched successfully.",
     });
   } catch (error) {
     next(error);
   }
 };
 
-// CREATE Achievement
-const create_achievement = async (req, res, next) => {
+// CREATE Theme
+const create_theme = async (req, res, next) => {
   try {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
@@ -51,29 +50,26 @@ const create_achievement = async (req, res, next) => {
 
     let updated_data = enrichData(input_data);
     updated_data.workspace_id = workspace_id;
-    const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
-    updated_data.created_by = user_name?.name || "Unknown";
+    updated_data.created_by = req.headers.authorization || "Unknown";
 
-    const result = await achievements_collection.insertOne(updated_data);
-
+    const result = await themes_collection.insertOne(updated_data);
     return response_sender({
       res,
       status_code: 200,
       error: false,
       data: result,
-      message: "Achievement created successfully.",
+      message: "Theme created successfully.",
     });
   } catch (error) {
     next(error);
   }
 };
 
-// UPDATE Achievement
-const update_achievement = async (req, res, next) => {
+// UPDATE Theme
+const update_theme = async (req, res, next) => {
   try {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
-
     const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
     if (!check_workspace) {
       return response_sender({
@@ -87,53 +83,10 @@ const update_achievement = async (req, res, next) => {
 
     let updated_data = enrichData(input_data);
     updated_data.workspace_id = workspace_id;
-
-    const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
-    updated_data.updated_by = user_name?.name || "Unknown";
-
-    const result = await achievements_collection.updateOne(
-      { _id: new ObjectId(input_data.id) },
-      { $set: updated_data }
-    );
-
-    return response_sender({
-      res,
-      status_code: 200,
-      error: false,
-      data: result,
-      message: "Achievement updated successfully.",
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// DELETE Achievement (soft delete)
-const delete_achievement = async (req, res, next) => {
-  try {
-    const input_data = req.body;
-    const workspace_id = req.headers.workspace_id;
-
-    const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
-    if (!check_workspace) {
-      return response_sender({
-        res,
-        status_code: 404,
-        error: true,
-        data: null,
-        message: "Workspace not found",
-      });
-    }
-
-    let updated_data = enrichData(input_data);
-    updated_data.delete = true;
-
-    const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
-    updated_data.updated_by = user_name?.name || "Unknown";
-
+    updated_data.updated_by = req.headers.authorization || "Unknown";
     delete updated_data._id;
 
-    const result = await achievements_collection.updateOne(
+    const result = await themes_collection.updateOne(
       { _id: new ObjectId(input_data.id) },
       { $set: updated_data }
     );
@@ -143,7 +96,45 @@ const delete_achievement = async (req, res, next) => {
       status_code: 200,
       error: false,
       data: result,
-      message: "Achievement deleted successfully.",
+      message: "Theme updated successfully.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE Theme (soft delete)
+const delete_theme = async (req, res, next) => {
+  try {
+    const input_data = req.body;
+    const workspace_id = req.headers.workspace_id;
+    const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
+    if (!check_workspace) {
+      return response_sender({
+        res,
+        status_code: 404,
+        error: true,
+        data: null,
+        message: "Workspace not found",
+      });
+    }
+
+    let updated_data = enrichData(input_data);
+    updated_data.updated_by = req.headers.authorization || "Unknown";
+    delete updated_data._id;
+    updated_data.delete = true;
+
+    const result = await themes_collection.updateOne(
+      { _id: new ObjectId(input_data.id) },
+      { $set: updated_data }
+    );
+
+    return response_sender({
+      res,
+      status_code: 200,
+      error: false,
+      data: result,
+      message: "Theme deleted successfully.",
     });
   } catch (error) {
     next(error);
@@ -151,8 +142,8 @@ const delete_achievement = async (req, res, next) => {
 };
 
 module.exports = {
-  get_achievements,
-  create_achievement,
-  update_achievement,
-  delete_achievement,
+  create_theme,
+  get_theme,
+  update_theme,
+  delete_theme,
 };

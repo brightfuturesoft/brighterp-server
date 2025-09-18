@@ -1,11 +1,7 @@
 const express = require('express');
 const { check_user } = require('../../hooks/check_user');
-const { 
-  create_seo, 
-  get_seo, 
-  update_seo, 
-  delete_seo 
-} = require('./seo_module');
+const { create_seo, get_seo, update_seo, delete_seo } = require('./general_seo_module');
+
 
 const router = express.Router();
 
