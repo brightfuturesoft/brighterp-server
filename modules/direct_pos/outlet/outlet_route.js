@@ -1,6 +1,6 @@
 const express = require('express');
 const { check_user } = require('../../hooks/check_user');
-const { create_outlet, get_outlets, update_outlet, delete_outlet } = require('./outlets_module');
+const { create_outlet, get_outlets, update_outlet, delete_outlet } = require('./outlet_module');
 
 const router = express.Router();
 
