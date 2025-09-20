@@ -11,6 +11,7 @@ const coa_router = require('../modules/accounts/coa/coa_router')
 const settings_router = require('../modules/settings/settings_router');
 const customers_order_router = require('../modules/customers_orders/customers_order_router');
 const customers_router = require('../modules/customers/customers_router');
+const direct_pos_router = require('../modules/direct_pos/direct_pos_router');
 
 
 const modulesRoutes = [
@@ -33,6 +34,10 @@ const modulesRoutes = [
       {
             path:'/ecommerce',
             route:ecommerce_router
+      },
+      {
+            path:'/direct-pos',
+            route:direct_pos_router
       },
      {
             path: "/coa",
