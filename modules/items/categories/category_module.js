@@ -1,5 +1,5 @@
 const { ObjectId } = require("mongodb");
-const { category_collection } = require("../../../collection/collections/item/items");
+const { category_collection, item_collection } = require("../../../collection/collections/item/items");
 const { enrichData } = require("../../hooks/data_update");
 const { workspace_collection, user_collection } = require("../../../collection/collections/auth");
 const { response_sender } = require("../../hooks/respose_sender");
@@ -24,20 +24,28 @@ const get_category = async (req, res, next) => {
                   { $match: { workspace_id, delete: { $ne: true } } },
                   {
                         $lookup: {
-                              from: "product_collection", // Change to your actual product collection name
-                              localField: "_id",
-                              foreignField: "category_id", // Make sure this is the field in product referencing category
+                              from: "item", // use collection name as string here
+                              let: { categoryId: { $toString: "$_id" } },
+                              pipeline: [
+                                    {
+                                          $match: {
+                                                $expr: {
+                                                      $in: ["$$categoryId", "$categories.value"] // check if categoryId exists in array
+                                                }
+                                          }
+                                    }
+                              ],
                               as: "products"
                         }
                   },
                   {
                         $addFields: {
-                              itemCount: { $size: "$products" }
+                              itemCount: { $size: "$products" } // count number of matched items
                         }
                   },
                   {
                         $project: {
-                              products: 0 // Remove products array, only keep itemCount
+                              products: 0 // hide the full array
                         }
                   }
             ]).toArray();
@@ -53,6 +61,9 @@ const get_category = async (req, res, next) => {
             next(error);
       }
 };
+
+
+
 
 const create_category = async (req, res, next) => {
       try {

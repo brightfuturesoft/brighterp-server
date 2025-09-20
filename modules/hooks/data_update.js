@@ -1,6 +1,4 @@
-// hooks/data_update.js
 
-// enriches payload with timestamps and extra fields
 function enrichData(data = {}, extra = {}) {
   const enriched = {
     ...data,
@@ -15,7 +13,6 @@ function enrichData(data = {}, extra = {}) {
   return enriched;
 }
 
-// standard API response wrapper
 function response_sender({ res, status_code = 200, error = false, data = null, message = "" }) {
   return res.status(status_code).json({
     error,
@@ -28,3 +25,4 @@ module.exports = {
   enrichData,
   response_sender,
 };
+

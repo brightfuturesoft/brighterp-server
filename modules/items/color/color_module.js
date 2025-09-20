@@ -90,14 +90,14 @@ const update_color = async (req, res, next) => {
                         message: "Workspace not found",
                   });
             }
-            const find_color = await color_collection.findOne({ code: input_data.code });
-            if (find_color) {
+            const find_color = await color_collection.findOne({ _id: new ObjectId(input_data.id) });
+            if (!find_color) {
                   return response_sender({
                         res,
                         status_code: 400,
                         error: true,
                         data: null,
-                        message: "color already exist.",
+                        message: "Color not found.",
                   });
             }
             let updated_data = enrichData(input_data);
@@ -120,6 +120,7 @@ const update_color = async (req, res, next) => {
 
 const delete_color = async (req, res, next) => {
       try {
+            console.log("hit");
             const input_data = req.body;
             const workspace_id = req.headers.workspace_id;
             const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
