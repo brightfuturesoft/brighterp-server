@@ -7,11 +7,13 @@ const initial_route = require('../modules/hooks/initial_route'); // Adjust the p
 const auth_router = require('../modules/auth/auth_router'); // Adjust the path if necessary
 const item_router = require('../modules/items/item_router'); // Adjust the path if necessary
 const transaction_route=require('../modules/accounts/transaction/transaction_route');
+const hrm_route=require('../modules/hrm/hrm_route');
 const coa_router = require('../modules/accounts/coa/coa_router')
 const settings_router = require('../modules/settings/settings_router');
 const customers_order_router = require('../modules/customers_orders/customers_order_router');
 const customers_router = require('../modules/customers/customers_router');
 const direct_pos_router = require('../modules/direct_pos/direct_pos_router');
+
 
 
 const modulesRoutes = [
@@ -48,6 +50,11 @@ const modulesRoutes = [
             route: transaction_route,
       },
       {
+
+            path:"/hrm",
+            route: hrm_route,  
+      },
+  {
             path: '/settings',     
             route: settings_router,
       },
@@ -59,6 +66,7 @@ const modulesRoutes = [
             path: '/customers',     
             route: customers_router,
       },
+
 ];
 
 modulesRoutes.forEach(route => router.use(route.path, route.route));
