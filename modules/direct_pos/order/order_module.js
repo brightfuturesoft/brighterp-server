@@ -1,14 +1,20 @@
 const { ObjectId } = require("mongodb");
 const { enrichData } = require("../../hooks/data_update");
 const { response_sender } = require("../../hooks/respose_sender");
-const { workspace_collection } = require("../../../collection/collections/auth");
-const { orders_collection } = require("../../../collection/collections/direct_pos/direct_post");
+const {
+  workspace_collection,
+} = require("../../../collection/collections/auth");
+const {
+  orders_collection,
+} = require("../../../collection/collections/direct_pos/direct_post");
 
 // GET Orders
 const get_orders = async (req, res, next) => {
   try {
     const workspace_id = req.headers.workspace_id;
-    const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
+    const check_workspace = await workspace_collection.findOne({
+      _id: new ObjectId(workspace_id),
+    });
     if (!check_workspace) {
       return response_sender({
         res,
@@ -19,7 +25,9 @@ const get_orders = async (req, res, next) => {
       });
     }
 
-    const orders = await orders_collection.find({ workspace_id, delete: { $ne: true } }).toArray();
+    const orders = await orders_collection
+      .find({ workspace_id, delete: { $ne: true } })
+      .toArray();
     return response_sender({
       res,
       status_code: 200,
@@ -37,7 +45,9 @@ const create_order = async (req, res, next) => {
   try {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
-    const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
+    const check_workspace = await workspace_collection.findOne({
+      _id: new ObjectId(workspace_id),
+    });
     if (!check_workspace) {
       return response_sender({
         res,
@@ -47,19 +57,40 @@ const create_order = async (req, res, next) => {
         message: "Workspace not found",
       });
     }
+    const prefix = (check_workspace?.name || "ORDER")
+      .replace(/\s+/g, "_")
+      .toLowerCase();
+    const lastOrder = await orders_collection
+      .find({ workspace_id, delete:false })
+      .sort({ createdAt: -1 }) 
+      .limit(1)
+      .toArray();
 
+    let nextNumber;
+
+    if (lastOrder.length === 0 || !lastOrder[0].order_number) {
+      nextNumber = 1;
+    } else {
+      const parts = lastOrder[0].order_number.split("_");
+      const lastNumber = parseInt(parts[parts.length - 1]);
+      nextNumber = isNaN(lastNumber) ? 1 : lastNumber + 1;
+    }
+
+    const order_number = `${prefix}_${String(nextNumber).padStart(2, "0")}`;
     let updated_data = enrichData(input_data);
     updated_data.workspace_id = workspace_id;
-    const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
+    updated_data.order_number = order_number;
+    updated_data.createdAt = new Date();
+    const user_name = await workspace_collection.findOne({
+      _id: new ObjectId(req.headers.authorization),
+    });
     updated_data.created_by = user_name?.name || "Unknown";
-
     const result = await orders_collection.insertOne(updated_data);
-
     return response_sender({
       res,
       status_code: 200,
       error: false,
-      data: result,
+      data: { ...result, order_number },
       message: "Order created successfully.",
     });
   } catch (error) {
@@ -73,7 +104,9 @@ const update_order = async (req, res, next) => {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
 
-    const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
+    const check_workspace = await workspace_collection.findOne({
+      _id: new ObjectId(workspace_id),
+    });
     if (!check_workspace) {
       return response_sender({
         res,
@@ -87,7 +120,9 @@ const update_order = async (req, res, next) => {
     let updated_data = enrichData(input_data);
     updated_data.workspace_id = workspace_id;
 
-    const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
+    const user_name = await workspace_collection.findOne({
+      _id: new ObjectId(req.headers.authorization),
+    });
     updated_data.updated_by = user_name?.name || "Unknown";
 
     const result = await orders_collection.updateOne(
@@ -113,7 +148,9 @@ const delete_order = async (req, res, next) => {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
 
-    const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
+    const check_workspace = await workspace_collection.findOne({
+      _id: new ObjectId(workspace_id),
+    });
     if (!check_workspace) {
       return response_sender({
         res,
@@ -127,7 +164,9 @@ const delete_order = async (req, res, next) => {
     let updated_data = enrichData(input_data);
     updated_data.delete = true;
 
-    const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
+    const user_name = await workspace_collection.findOne({
+      _id: new ObjectId(req.headers.authorization),
+    });
     updated_data.updated_by = user_name?.name || "Unknown";
 
     delete updated_data._id;
