@@ -34,7 +34,7 @@ const encrypt = (text) => {
 const create_a_workspace = async (req, res, next) => {
   try {
     const user_data = req.body.user;
-    const workspace_data = req.body.workSpace; // Change this to workSpace
+    const workspace_data = req.body.workSpace; 
 
     if (!user_data.email || !workspace_data.name) {
       return response_sender({
