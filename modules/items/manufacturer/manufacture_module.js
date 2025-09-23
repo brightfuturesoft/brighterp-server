@@ -45,7 +45,7 @@ const create_manufacture = async (req, res, next) => {
                         message: "Workspace not found",
                   });
             }
-            const find_manufacture = await manufacturer_collection.findOne({ code: input_data.code });
+            const find_manufacture = await manufacturer_collection.findOne({ code: input_data.code,workspace_id, delete:false });
             if (find_manufacture) {
                   return response_sender({
                         res,
@@ -87,16 +87,6 @@ const update_manufacture = async (req, res, next) => {
                         error: true,
                         data: null,
                         message: "Workspace not found",
-                  });
-            }
-            const find_manufacture = await manufacturer_collection.findOne({ code: input_data.code });
-            if (find_manufacture) {
-                  return response_sender({
-                        res,
-                        status_code: 400,
-                        error: true,
-                        data: null,
-                        message: "Manufacture already exist.",
                   });
             }
             let updated_data = enrichData(input_data);

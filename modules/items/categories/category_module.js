@@ -81,7 +81,8 @@ const create_category = async (req, res, next) => {
             }
             let updated_data = enrichData(input_data);
             //check this category already exist or not
-            const check_category = await category_collection.findOne({ code: input_data.code });
+            const check_category = await category_collection.findOne({ code: input_data.code, workspace_id,
+            delete: false });
             if (check_category) {
                   return response_sender({
                         res,
@@ -107,6 +108,83 @@ const create_category = async (req, res, next) => {
             next(error);
       }
 };
+
+const import_category = async (req, res, next) => {
+    try {
+        const { categories } = req.body;
+        if (!categories || !Array.isArray(categories) || categories.length === 0) {
+            return response_sender({
+                res,
+                status_code: 400,
+                error: true,
+                data: null,
+                message: "No categories provided for import",
+            });
+        }
+
+        const workspace_id = req.headers.workspace_id;
+        const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
+        if (!check_workspace) {
+            return response_sender({
+                res,
+                status_code: 404,
+                error: true,
+                data: null,
+                message: "Workspace not found",
+            });
+        }
+
+        const user = await user_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
+        if (!user) {
+            return response_sender({
+                res,
+                status_code: 404,
+                error: true,
+                data: null,
+                message: "User not found",
+            });
+        }
+        const codes = categories.map(c => c.code);
+        const existingCategories = await category_collection.find({
+            code: { $in: codes },
+            workspace_id,
+            delete: false
+        }).toArray();
+        const existingCodes = existingCategories.map(c => c.code);
+        const categoriesToInsert = categories.map(cat => ({
+            ...enrichData(cat),
+            workspace_id,
+            created_by: user.name,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            delete: false,
+        })).filter(cat => !existingCodes.includes(cat.code));
+
+        if (categoriesToInsert.length === 0) {
+            return response_sender({
+                res,
+                status_code: 200,
+                error: false,
+                data: null,
+                message: "No new categories to import",
+            });
+        }
+
+        const result = await category_collection.insertMany(categoriesToInsert);
+
+        return response_sender({
+            res,
+            status_code: 200,
+            error: false,
+            data: result,
+            message: `${result.insertedCount} categories imported successfully`,
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
 
 
 const update_category = async (req, res, next) => {
@@ -190,4 +268,52 @@ const delete_category = async (req, res, next) => {
       }
 };
 
-module.exports = { create_category, get_category, update_category, delete_category }
+const delete_many_category = async (req, res, next) => {
+    try {
+        const { ids } = req.body; 
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return response_sender({
+                res,
+                status_code: 400,
+                error: true,
+                data: null,
+                message: "No category IDs provided for deletion",
+            });
+        }
+
+        const workspace_id = req.headers.workspace_id;
+        const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
+        if (!check_workspace) {
+            return response_sender({
+                res,
+                status_code: 404,
+                error: true,
+                data: null,
+                message: "Workspace not found",
+            });
+        }
+
+        const user_name = await user_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
+        const updated_data = {
+            delete: true,
+            created_by: user_name.name,
+        };
+        const objectIds = ids.map(id => new ObjectId(id));
+        const result = await category_collection.updateMany(
+            { _id: { $in: objectIds } },
+            { $set: updated_data }
+        );
+        return response_sender({
+            res,
+            status_code: 200,
+            error: false,
+            data: result,
+            message: `${result.modifiedCount} categories deleted successfully`,
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+module.exports = {import_category, create_category, get_category, update_category, delete_category, delete_many_category }
