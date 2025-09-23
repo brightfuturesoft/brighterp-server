@@ -14,6 +14,7 @@ const customers_order_router = require('../modules/customers_orders/customers_or
 const customers_router = require('../modules/customers/customers_router');
 const direct_pos_router = require('../modules/direct_pos/direct_pos_router');
 const admin_router = require('../Admin_modules/Admin_router');
+const home_router = require('../modules/home/home_router');
 
 
 
@@ -70,6 +71,10 @@ const modulesRoutes = [
       {
             path: '/admin',
             route: admin_router,
+      },
+      {
+            path:"/home",
+            route:home_router
       }
 
 ];
