@@ -1,8 +1,12 @@
 const { ObjectId } = require("mongodb");
 const { enrichData } = require("../../hooks/data_update");
 const { response_sender } = require("../../hooks/respose_sender");
-const { workspace_collection } = require("../../../collection/collections/auth");
-const { newsletter_collection } = require("../../../collection/collections/home/home");
+const {
+  workspace_collection,
+} = require("../../../collection/collections/auth");
+const {
+  newsletter_collection,
+} = require("../../../collection/collections/home/home");
 
 // GET Newsletters
 const get_newsletters = async (req, res, next) => {
@@ -41,43 +45,39 @@ const get_newsletters = async (req, res, next) => {
 const create_newsletter = async (req, res, next) => {
   try {
     const input_data = req.body;
-    const workspace_id = req.headers.workspace_id;
-
-    const check_workspace = await workspace_collection.findOne({
-      _id: new ObjectId(workspace_id),
-    });
-    if (!check_workspace) {
-      return response_sender({
-        res,
-        status_code: 404,
+    if (!input_data.email) {
+      return res.status(400).json({
         error: true,
-        data: null,
-        message: "Workspace not found",
+        message: "Email is required",
       });
     }
-
-    let updated_data = enrichData(input_data);
-    updated_data.workspace_id = workspace_id;
-    updated_data.createdAt = new Date();
-
-    const user_name = await workspace_collection.findOne({
-      _id: new ObjectId(req.headers.authorization),
+    const alreadySubscribed = await newsletter_collection.findOne({
+      email: input_data.email,
     });
-    updated_data.created_by = user_name?.name || "Unknown";
+    if (alreadySubscribed) {
+      return res.status(400).json({
+        error: true,
+        message: "This email is already subscribed.",
+      });
+    }
+    const newNewsletter = {
+      email: input_data.email,
+      createdAt: new Date(),
+    };
 
-    const result = await newsletter_collection.insertOne(updated_data);
+    const result = await newsletter_collection.insertOne(newNewsletter);
 
-    return response_sender({
-      res,
-      status_code: 200,
+    return res.status(200).json({
       error: false,
-      data: result,
       message: "Newsletter created successfully.",
+      data: result,
     });
   } catch (error) {
+    console.error(error);
     next(error);
   }
 };
+
 
 // UPDATE Newsletter
 const update_newsletter = async (req, res, next) => {

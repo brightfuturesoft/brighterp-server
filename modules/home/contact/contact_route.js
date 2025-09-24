@@ -9,7 +9,7 @@ const {
 
 const router = express.Router();
 
-router.post('/create-contact', check_user, create_contact);
+router.post('/create-contact', create_contact);
 router.get('/get-contacts', check_user, get_contacts);
 router.patch('/update-contact', check_user, update_contact);
 router.delete('/delete-contact', check_user, delete_contact);

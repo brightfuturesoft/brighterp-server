@@ -40,32 +40,20 @@ const get_contacts = async (req, res, next) => {
 const create_contact = async (req, res, next) => {
   try {
     const input_data = req.body;
-    const workspace_id = req.headers.workspace_id;
-
-    const check_workspace = await workspace_collection.findOne({
-      _id: new ObjectId(workspace_id),
-    });
-    if (!check_workspace) {
+    if (!input_data.name || !input_data.email) {
       return response_sender({
         res,
-        status_code: 404,
+        status_code: 400,
         error: true,
         data: null,
-        message: "Workspace not found",
+        message: "Please provide a valid name and email.",
       });
     }
-
-    let updated_data = enrichData(input_data);
-    updated_data.workspace_id = workspace_id;
-    updated_data.createdAt = new Date();
-
-    const user_name = await workspace_collection.findOne({
-      _id: new ObjectId(req.headers.authorization),
-    });
-    updated_data.created_by = user_name?.name || "Unknown";
-
-    const result = await contact_collection.insertOne(updated_data);
-
+    const contactData = {
+      ...input_data,
+      createdAt: new Date(),
+    };
+    const result = await contact_collection.insertOne(contactData);
     return response_sender({
       res,
       status_code: 200,
@@ -74,9 +62,16 @@ const create_contact = async (req, res, next) => {
       message: "Contact created successfully.",
     });
   } catch (error) {
-    next(error);
+    return response_sender({
+      res,
+      status_code: 500,
+      error: true,
+      data: null,
+      message: "Something went wrong while creating the contact.",
+    });
   }
 };
+
 
 // UPDATE Contact
 const update_contact = async (req, res, next) => {
