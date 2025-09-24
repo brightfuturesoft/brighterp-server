@@ -8,7 +8,7 @@ const {
 } = require('./newsletter_module');
 
 const router = express.Router();
-router.post('/create-newsletter', check_user, create_newsletter);
+router.post('/create-newsletter', create_newsletter);
 router.get('/get-newsletters', check_user, get_newsletters);
 router.patch('/update-newsletter', check_user, update_newsletter);
 router.delete('/delete-newsletter', check_user, delete_newsletter);
