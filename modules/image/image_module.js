@@ -64,11 +64,9 @@ const get_image_by_id = async (req, res, next) => {
       try {
             let imageId = req.params.id;
             imageId = imageId.replace(/\.[^/.]+$/, "");
-
             const imageDoc = await image_collection.findOne({
                   _id: new ObjectId(imageId),
             });
-
             if (!imageDoc) {
                   res.status(404).json({ error: "Image not found" });
             } else {

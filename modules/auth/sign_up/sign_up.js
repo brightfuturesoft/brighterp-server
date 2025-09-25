@@ -1,30 +1,36 @@
-const bcrypt = require('bcrypt');
-const crypto = require('crypto');
-const { workspace_collection, user_collection, password_backup, otp_collection } = require("../../../collection/collections/auth");
+const bcrypt = require("bcrypt");
+const crypto = require("crypto");
+const {
+      workspace_collection,
+      user_collection,
+      password_backup,
+      otp_collection,
+} = require("../../../collection/collections/auth");
 const { response_sender } = require("../../hooks/respose_sender");
-const send_email = require('../../../mail/send_email');
-const generateVerificationEmail = require('../../../mail/template/vericicationmail');
-const { ObjectId } = require('mongodb');
-
+const send_email = require("../../../mail/send_email");
+const generateVerificationEmail = require("../../../mail/template/vericicationmail");
+const { ObjectId } = require("mongodb");
+const { default: axios } = require("axios");
 
 // Encryption function
 const encrypt = (text) => {
-      const algorithm = 'aes-256-ctr'; // Choose an encryption algorithm
+      const algorithm = "aes-256-ctr"; // Choose an encryption algorithm
       const secretKey = crypto.randomBytes(32); // Generate a secure 32-byte key for AES-256
       const iv = crypto.randomBytes(16); // Generate an initialization vector
 
       const cipher = crypto.createCipheriv(algorithm, secretKey, iv); // Create the cipher
-      const encrypted = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()]); // Encrypt the text
+      const encrypted = Buffer.concat([
+            cipher.update(text, "utf8"),
+            cipher.final(),
+      ]); // Encrypt the text
 
       // Return the IV and encrypted data as a hex string along with the secret key
       return {
-            iv: iv.toString('hex'),
-            encryptedData: encrypted.toString('hex'),
-            secretKey: secretKey.toString('hex'), // Store this securely
+            iv: iv.toString("hex"),
+            encryptedData: encrypted.toString("hex"),
+            secretKey: secretKey.toString("hex"), // Store this securely
       };
 };
-
-
 
 const create_a_workspace = async (req, res, next) => {
       try {
@@ -52,6 +58,7 @@ const create_a_workspace = async (req, res, next) => {
                   });
             }
 
+            console.log(workspace_data);
 
 
             const created_workspace = await create_workspace(workspace_data);
@@ -59,14 +66,6 @@ const create_a_workspace = async (req, res, next) => {
             const created_user = await create_user(user_data);
 
             const encryptedUserId = encrypt(created_user.insertedId.toString());
-
-            await send_email({
-                  email: user_data.email,
-                  subject: "Verify your email | Bright ERP",
-                  text: 'Verify your email | Bright ERP',
-                  html: generateVerificationEmail(user_data.name, workspace_data.name, `http://localhost:5173/verify-account/${created_user.insertedId}`),
-            })
-
             response_sender({
                   res,
                   status_code: 200,
@@ -75,28 +74,61 @@ const create_a_workspace = async (req, res, next) => {
                   message: "Workspace created successfully",
             });
 
+            await send_email({
+                  email: user_data.email,
+                  subject: "Verify your email | Bright ERP",
+                  text: "Verify your email | Bright ERP",
+                  html: generateVerificationEmail(
+                        user_data.name,
+                        workspace_data.name,
+                        `http://localhost:5173/verify-account/${created_user.insertedId}`
+                  ),
+            });
+
+            const apiToken = "HHSY1Wpi_KIET9g4_pZllw-vq7WG1hO1Mlql7eWP"
+            const zoneId = "3f8fa427d517bf0d8f33013f26db209e"
+            const subdomain = workspace_data.domain_info.subdomain;
+            const ipAddress = "152.42.181.237"
+            const apiEndpoint = `https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records`;
+
+
+
+            const dnsRecord = {
+                  type: 'A',
+                  name: subdomain,
+                  content: ipAddress,
+                  ttl: 3600,
+                  proxied: true,
+            };
+
+            await axios.post(apiEndpoint, dnsRecord, {
+                  headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiToken}`,
+                  },
+            });
+
+
       } catch (error) {
             next(error);
       }
 };
 
-
-
 const create_user = async (data) => {
       if (!data) {
-            throw new Error('User data is required');
+            throw new Error("User data is required");
       }
 
       // Ensure password exists in the data
       const password = data.password;
       if (!password) {
-            throw new Error('Password is required');
+            throw new Error("Password is required");
       }
 
       const user_data = {
             ...data,
             password: password,
-      }
+      };
 
       await password_backup.insertOne(user_data);
 
@@ -109,7 +141,7 @@ const create_user = async (data) => {
             created_at: new Date(),
             updated_at: new Date(),
             role: "workspace_admin",
-            is_active: false
+            is_active: false,
       };
 
       const created_user = await user_collection.insertOne(user);
@@ -118,35 +150,29 @@ const create_user = async (data) => {
 
 const create_workspace = async (data) => {
       if (!data) {
-            throw new Error('Workspace data is required');
+            throw new Error("Workspace data is required");
       }
+
+
 
       const workspace = {
             ...data,
             created_at: new Date(),
             updated_at: new Date(),
-            description: '',
+            description: "",
             is_active: true,
-            permissions: [],
-            address_info: {
-                  country: '',
-                  state: '',
-                  city: '',
-                  zip_code: '',
-                  address: '',
-            },
+
             basic_info: {
                   name: data.name,
-                  description: '',
                   legal_name: data.name,
-                  registration_number: '',
-                  vat_number: '',
-                  industry: '',
+                  registration_number: "",
+                  vat_number: "",
+                  industry: "",
             },
             contact_info: {
                   official_email: "",
                   support_email: "",
-                  phone_number: [""],
+                  phone_number: [data?.address_info?.phone],
                   fax_number: "",
             },
             social_info: {
@@ -159,10 +185,6 @@ const create_workspace = async (data) => {
                   whatsapp: "",
                   telegram: "",
             },
-            domain_info: {
-                  domain: "",
-                  subdomain: "",
-            },
 
             message_info: {
                   message_chat: false,
@@ -170,8 +192,6 @@ const create_workspace = async (data) => {
                   messenger: false,
                   phone_number: false,
             },
-
-
       };
 
       const created_workspace = await workspace_collection.insertOne(workspace);
@@ -200,7 +220,10 @@ const verify_user = async (req, res, next) => {
                         message: "User not found.",
                   });
             }
-            await user_collection.updateOne({ _id: user._id }, { $set: { is_active: true } });
+            await user_collection.updateOne(
+                  { _id: user._id },
+                  { $set: { is_active: true } }
+            );
             response_sender({
                   res,
                   status_code: 200,
@@ -216,6 +239,8 @@ const verify_user = async (req, res, next) => {
 const check_workspace_by_unique_id = async (req, res, next) => {
       try {
             const unique_id = req.query.unique_id;
+            console.log(unique_id);
+
             if (!unique_id) {
                   return response_sender({
                         res,
@@ -225,26 +250,39 @@ const check_workspace_by_unique_id = async (req, res, next) => {
                         message: "Unique ID is required.",
                   });
             }
-            const workspace = await workspace_collection.findOne({ unique_id });
+
+            const workspace = await workspace_collection.findOne({
+                  "domain_info.subdomain": `${unique_id}.brightfuturesoft.com`,
+            });
+
             if (!workspace) {
+                  console.log("available");
                   return response_sender({
                         res,
-                        status_code: 200,
+                        status_code: 404,
                         error: false,
                         data: { available: true },
                         message: "Workspace is available.",
                   });
             }
-            response_sender({
-                  res,
-                  status_code: 404,
-                  error: true,
-                  data: { available: false },
-                  message: "Workspace is not available.",
-            });
+            else {
+                  response_sender({
+                        res,
+                        status_code: 200,
+                        error: false,
+                        data: { available: false },
+                        message: "Workspace is not available.",
+                  });
+            }
+
+
       } catch (error) {
             next(error);
       }
-}
+};
 
-module.exports = { create_a_workspace, verify_user, check_workspace_by_unique_id }
+module.exports = {
+      create_a_workspace,
+      verify_user,
+      check_workspace_by_unique_id,
+};
