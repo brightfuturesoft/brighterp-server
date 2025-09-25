@@ -15,6 +15,7 @@ const customers_router = require('../modules/customers/customers_router');
 const direct_pos_router = require('../modules/direct_pos/direct_pos_router');
 const admin_router = require('../Admin_modules/Admin_router');
 const home_router = require('../modules/home/home_router');
+const sale_router = require('../modules/sale/sale_router');
 
 
 
@@ -75,6 +76,9 @@ const modulesRoutes = [
       {
             path:"/home",
             route:home_router
+      },{
+            path:"/sale",
+            route:sale_router
       }
 
 ];
