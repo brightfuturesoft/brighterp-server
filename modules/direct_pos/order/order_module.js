@@ -58,7 +58,7 @@ const get_return_orders = async (req, res, next) => {
     }
 
     const orders = await orders_collection
-      .find({ workspace_id, delete: { $ne: true }, status:"Return"})
+      .find({ workspace_id, delete: { $ne: true }, order_status:"Return"})
       .toArray();
     return response_sender({
       res,
@@ -90,7 +90,7 @@ const get_refund_orders = async (req, res, next) => {
     }
 
     const orders = await orders_collection
-      .find({ workspace_id, delete: { $ne: true }, status:"Refund"})
+      .find({ workspace_id, delete: { $ne: true }, order_status:"Refund"})
       .toArray();
     return response_sender({
       res,
