@@ -15,6 +15,7 @@ const get_orders = async (req, res, next) => {
     const check_workspace = await workspace_collection.findOne({
       _id: new ObjectId(workspace_id),
     });
+
     if (!check_workspace) {
       return response_sender({
         res,
@@ -26,8 +27,13 @@ const get_orders = async (req, res, next) => {
     }
 
     const orders = await orders_collection
-      .find({ workspace_id, delete: { $ne: true } })
+      .find({
+        workspace_id,
+        delete: { $ne: true },
+        order_status: { $nin: ["Return", "Refund"] },
+      })
       .toArray();
+
     return response_sender({
       res,
       status_code: 200,
@@ -58,7 +64,7 @@ const get_return_orders = async (req, res, next) => {
     }
 
     const orders = await orders_collection
-      .find({ workspace_id, delete: { $ne: true }, order_status:"Return"})
+      .find({ workspace_id, delete: { $ne: true }, order_status:{ $regex: /^return$/i }})
       .toArray();
     return response_sender({
       res,
@@ -90,7 +96,7 @@ const get_refund_orders = async (req, res, next) => {
     }
 
     const orders = await orders_collection
-      .find({ workspace_id, delete: { $ne: true }, order_status:"Refund"})
+      .find({ workspace_id, delete: { $ne: true }, order_status:{ $regex: /^refund$/i }})
       .toArray();
     return response_sender({
       res,

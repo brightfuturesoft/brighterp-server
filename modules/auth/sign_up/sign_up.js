@@ -86,12 +86,10 @@ const create_a_workspace = async (req, res, next) => {
             });
 
             const apiToken = "HHSY1Wpi_KIET9g4_pZllw-vq7WG1hO1Mlql7eWP"
-            const zoneId = "3f8fa427d517bf0d8f33013f26db209e"
+            const zoneId = "6f6bb7e6b58565fc93050f89e460fc20"
             const subdomain = workspace_data.domain_info.subdomain;
             const ipAddress = "152.42.181.237"
             const apiEndpoint = `https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records`;
-
-
 
             const dnsRecord = {
                   type: 'A',
