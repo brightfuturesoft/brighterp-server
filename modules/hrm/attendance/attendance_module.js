@@ -3,14 +3,14 @@ const { response_sender } = require("../../hooks/respose_sender");
 const {
   attendance_collection,
   leave_collection,
-  office_hours_collection 
-} = require("../../../collection/collections/hrm/employees"); 
+  office_hours_collection
+} = require("../../../collection/collections/hrm/employees");
 const { user_collection } = require("../../../collection/collections/auth");
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
 
-// Extend dayjs with plugins
+// --- Extend Dayjs ---
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -19,7 +19,6 @@ const authenticateUser = async (req) => {
   try {
     const userId = req.headers.authorization;
     if (!userId) return null;
-
     const user = await user_collection.findOne({ _id: new ObjectId(userId) });
     return user;
   } catch (err) {
@@ -27,7 +26,14 @@ const authenticateUser = async (req) => {
   }
 };
 
-// --- Helper: Get office hours for a workspace ---
+// --- Helper: Safe Dayjs object in Dhaka timezone ---
+const safeDayjs = (hour, minute, second = 0) => {
+  const h = Number.isInteger(hour) ? hour : 15;
+  const m = Number.isInteger(minute) ? minute : 0;
+  return dayjs().tz("Asia/Dhaka").hour(h).minute(m).second(second);
+};
+
+// --- Get workspace office hours ---
 const getWorkspaceOfficeHours = async (workspace_id) => {
   const config = await office_hours_collection.findOne({ workspace_id });
 
@@ -38,27 +44,33 @@ const getWorkspaceOfficeHours = async (workspace_id) => {
     endMinute: 0
   };
 
-  return config?.hours || defaultHours;
+  const hours = config?.hours || defaultHours;
+
+  return {
+    startHour: Number.isInteger(hours.startHour) ? hours.startHour : defaultHours.startHour,
+    startMinute: Number.isInteger(hours.startMinute) ? hours.startMinute : defaultHours.startMinute,
+    endHour: Number.isInteger(hours.endHour) ? hours.endHour : defaultHours.endHour,
+    endMinute: Number.isInteger(hours.endMinute) ? hours.endMinute : defaultHours.endMinute
+  };
 };
 
-// --- Helper: Check attendance/leave windows ---
-const isWithinAttendanceWindow = (now, officeHours) => {
-  const { startHour, startMinute } = officeHours;
-  const start = dayjs.tz("Asia/Dhaka").hour(startHour).minute(startMinute).second(0);
+// --- Check attendance window ---
+const isWithinAttendanceWindow = (officeHours) => {
+  const start = safeDayjs(officeHours.startHour, officeHours.startMinute);
   const end = start.add(10, "minute");
-  const current = dayjs.tz(now, "Asia/Dhaka");
+  const current = dayjs().tz("Asia/Dhaka");
+
   return current.isAfter(start) && current.isBefore(end) || current.isSame(start);
 };
 
-const isWithinLeaveWindow = (now, officeHours) => {
-  const { startHour, startMinute, endHour, endMinute } = officeHours;
-  const current = dayjs.tz(now, "Asia/Dhaka");
+// --- Check leave window ---
+const isWithinLeaveWindow = (officeHours) => {
+  const officeEndTime = safeDayjs(officeHours.endHour, officeHours.endMinute);
+  let nextDayStart = safeDayjs(officeHours.startHour, officeHours.startMinute).add(1, "day");
+  const current = dayjs().tz("Asia/Dhaka");
 
-  const officeEndTime = dayjs.tz("Asia/Dhaka").hour(endHour).minute(endMinute).second(0);
-  let nextDayStart = dayjs.tz("Asia/Dhaka").add(1, "day").hour(startHour).minute(startMinute).second(0);
-
-  if (current.hour() < startHour || (current.hour() === startHour && current.minute() < startMinute)) {
-    nextDayStart = dayjs.tz("Asia/Dhaka").hour(startHour).minute(startMinute).second(0);
+  if (current.isBefore(safeDayjs(officeHours.startHour, officeHours.startMinute))) {
+    nextDayStart = safeDayjs(officeHours.startHour, officeHours.startMinute);
   }
 
   return (current.isAfter(officeEndTime) || current.isSame(officeEndTime)) && current.isBefore(nextDayStart);
@@ -72,12 +84,13 @@ const markAttendance = async (req, res, next) => {
 
     const employeeId = req.headers.authorization;
     const workspace_id = req.headers.workspace_id;
-    const now = dayjs.tz("Asia/Dhaka");
-    const officeHours = await getWorkspaceOfficeHours(workspace_id);
 
-    if (!isWithinAttendanceWindow(now, officeHours)) {
-      const startTime = dayjs.tz("Asia/Dhaka").hour(officeHours.startHour).minute(officeHours.startMinute).format("h:mm A");
-      const endTime = dayjs.tz("Asia/Dhaka").hour(officeHours.startHour).minute(officeHours.startMinute + 10).format("h:mm A");
+    const officeHours = await getWorkspaceOfficeHours(workspace_id);
+    const now = dayjs().tz("Asia/Dhaka");
+
+    if (!isWithinAttendanceWindow(officeHours)) {
+      const startTime = safeDayjs(officeHours.startHour, officeHours.startMinute).format("h:mm A");
+      const endTime = safeDayjs(officeHours.startHour, officeHours.startMinute).add(10, "minute").format("h:mm A");
       return response_sender({ res, status_code: 403, message: `Attendance can only be marked between ${startTime} and ${endTime}.` });
     }
 
@@ -107,74 +120,95 @@ const markAttendance = async (req, res, next) => {
 const markLeave = async (req, res, next) => {
   try {
     const user = await authenticateUser(req);
-    if (!user) return response_sender({ res, status_code: 401, message: "Unauthorized user" });
+    if (!user)
+      return response_sender({
+        res,
+        status_code: 401,
+        message: "Unauthorized user"
+      });
 
     const employeeId = req.headers.authorization;
     const workspace_id = req.headers.workspace_id;
-    const now = dayjs.tz("Asia/Dhaka");
-    const officeHours = await getWorkspaceOfficeHours(workspace_id);
 
-    if (!isWithinLeaveWindow(now, officeHours)) {
-      const endTime = dayjs.tz("Asia/Dhaka").hour(officeHours.endHour).minute(officeHours.endMinute).format("h:mm A");
-      const nextStartTime = dayjs.tz("Asia/Dhaka").add(1, "day").hour(officeHours.startHour).minute(officeHours.startMinute).format("h:mm A");
-      return response_sender({ res, status_code: 403, message: `Leave can only be marked between ${endTime} today and ${nextStartTime} tomorrow.` });
+    const officeHours = await getWorkspaceOfficeHours(workspace_id);
+    const now = dayjs().tz("Asia/Dhaka");
+
+    if (!isWithinLeaveWindow(officeHours)) {
+      const endTime = safeDayjs(officeHours.endHour, officeHours.endMinute).format("h:mm A");
+      const nextStartTime = safeDayjs(officeHours.startHour, officeHours.startMinute)
+        .add(1, "day")
+        .format("h:mm A");
+      return response_sender({
+        res,
+        status_code: 403,
+        message: `Leave can only be marked between ${endTime} today and ${nextStartTime} tomorrow.`
+      });
     }
 
+    // Decide leave date (today or yesterday depending on cutoff)
     const currentHour = now.hour();
     const currentMinute = now.minute();
-    const leaveDate = (currentHour < officeHours.startHour || (currentHour === officeHours.startHour && currentMinute < officeHours.startMinute))
-      ? now.subtract(1, "day").startOf("day").toDate()
-      : now.startOf("day").toDate();
+    const leaveDate =
+      currentHour < officeHours.startHour ||
+      (currentHour === officeHours.startHour && currentMinute < officeHours.startMinute)
+        ? now.subtract(1, "day").startOf("day").toDate()
+        : now.startOf("day").toDate();
 
-    const existingAttendance = await attendance_collection.findOne({ employeeId: new ObjectId(employeeId), date: leaveDate });
-    if (existingAttendance) return response_sender({ res, status_code: 400, message: "Attendance or leave already marked for the relevant day." });
-
-    const leaveRecord = {
+    // 🔹 Only check leave_collection for duplicate leave entry
+    const existingLeave = await leave_collection.findOne({
       employeeId: new ObjectId(employeeId),
       workspace_id,
-      date: leaveDate,
-      status: "Leave",
-      markedBy: user.name || "Unknown",
-      markedAt: now.toDate(),
-      createdAt: now.toDate()
-    };
+      startDate: leaveDate,
+      endDate: leaveDate
+    });
 
-    const result = await attendance_collection.insertOne(leaveRecord);
+    if (existingLeave) {
+      return response_sender({
+        res,
+        status_code: 400,
+        message: "Leave already marked for this day."
+      });
+    }
 
-    await leave_collection.insertOne({
+    // Insert into leave_collection
+    const leaveRecord = {
       employeeId: new ObjectId(employeeId),
       workspace_id,
       startDate: leaveDate,
       endDate: leaveDate,
       status: "Approved",
-      reason: "Early leave",
+      reason: "Marked via system",
       markedBy: user.name || "Unknown",
       createdAt: now.toDate()
-    });
+    };
+    const leaveResult = await leave_collection.insertOne(leaveRecord);
 
-    return response_sender({ res, status_code: 201, data: { ...leaveRecord, _id: result.insertedId }, message: "Leave marked successfully!" });
+    return response_sender({
+      res,
+      status_code: 201,
+      data: { ...leaveRecord, _id: leaveResult.insertedId },
+      message: "Leave marked successfully!"
+    });
   } catch (error) {
     console.error("Mark Leave Error:", error);
     next(error);
   }
 };
 
-// --- Get Attendance Summary ---
+
+// --- Attendance Summary ---
 const getAttendanceSummary = async (req, res, next) => {
   try {
     const user = await authenticateUser(req);
-    if (!user) 
-      return response_sender({ res, status_code: 401, message: "Unauthorized user" });
+    if (!user) return response_sender({ res, status_code: 401, message: "Unauthorized user" });
 
     const employeeId = req.headers.authorization;
     const workspace_id = req.headers.workspace_id;
-
     const today = dayjs().tz("Asia/Dhaka");
     const startOfMonth = today.startOf("month").toDate();
     const endOfMonth = today.endOf("month").toDate();
     const currentDayOfMonth = today.date();
 
-    // Count Present and Leave days
     const presentCount = await attendance_collection.countDocuments({
       employeeId: new ObjectId(employeeId),
       workspace_id,
@@ -190,17 +224,12 @@ const getAttendanceSummary = async (req, res, next) => {
     });
 
     const todayStart = today.startOf("day").toDate();
-    const todaysRecord = await attendance_collection.findOne({
-      employeeId: new ObjectId(employeeId),
-      date: todayStart
-    });
+    const todaysRecord = await attendance_collection.findOne({ employeeId: new ObjectId(employeeId), date: todayStart });
 
-    // Safe formatter: only format if valid Date
     const safeCheckInFormat = (checkInTime) => {
       if (!checkInTime) return '-';
       const dt = dayjs(checkInTime);
-      if (!dt.isValid()) return '-';
-      return dt.tz("Asia/Dhaka").format("h:mm A");
+      return dt.isValid() ? dt.tz("Asia/Dhaka").format("h:mm A") : '-';
     };
 
     let todaysStatus = "Not Marked Yet";
@@ -215,8 +244,6 @@ const getAttendanceSummary = async (req, res, next) => {
         case "Absent":
           todaysStatus = "Absent";
           break;
-        default:
-          todaysStatus = "Not Marked Yet";
       }
     }
 
@@ -231,47 +258,30 @@ const getAttendanceSummary = async (req, res, next) => {
       leaveBalance: totalLeaveAllowed - leaveCount,
     };
 
-    return response_sender({
-      res,
-      status_code: 200,
-      data: summary,
-      message: "Attendance summary fetched successfully."
-    });
-
+    return response_sender({ res, status_code: 200, data: summary, message: "Attendance summary fetched successfully." });
   } catch (error) {
     console.error("Get Attendance Summary Error:", error);
     next(error);
   }
 };
 
-
-// --- Get & Update Office Hours ---
+// --- Get Office Hours ---
 const getOfficeHours = async (req, res, next) => {
   try {
     const user = await authenticateUser(req);
-    if (!user) 
-      return response_sender({ res, status_code: 401, message: "Unauthorized user" });
+    if (!user) return response_sender({ res, status_code: 401, message: "Unauthorized user" });
 
     const workspace_id = req.headers.workspace_id;
+    const officeHours = await getWorkspaceOfficeHours(workspace_id);
     const now = dayjs().tz("Asia/Dhaka");
 
-    const officeHours = await getWorkspaceOfficeHours(workspace_id);
-
-    // Safe numeric defaults
-    const startHour = Number.isInteger(officeHours.startHour) ? officeHours.startHour : 9;
-    const startMinute = Number.isInteger(officeHours.startMinute) ? officeHours.startMinute : 0;
-    const endHour = Number.isInteger(officeHours.endHour) ? officeHours.endHour : 18;
-    const endMinute = Number.isInteger(officeHours.endMinute) ? officeHours.endMinute : 0;
-
-    const officeStart = dayjs().tz("Asia/Dhaka").hour(startHour).minute(startMinute).second(0);
-    const officeEnd = dayjs().tz("Asia/Dhaka").hour(endHour).minute(endMinute).second(0);
-
+    const officeStart = safeDayjs(officeHours.startHour, officeHours.startMinute);
+    const officeEnd = safeDayjs(officeHours.endHour, officeHours.endMinute);
     const attendanceWindowEnd = officeStart.add(10, "minute");
-    const leaveWindowStart = officeEnd;
-    const leaveWindowEnd = dayjs().tz("Asia/Dhaka").add(1, "day").hour(startHour).minute(startMinute).second(0);
+    const leaveWindowEnd = officeStart.add(1, "day");
 
-    const isAttendanceActive = isWithinAttendanceWindow(now, officeHours);
-    const isLeaveActive = isWithinLeaveWindow(now, officeHours);
+    const isAttendanceActive = isWithinAttendanceWindow(officeHours);
+    const isLeaveActive = isWithinLeaveWindow(officeHours);
 
     res.json({
       success: true,
@@ -291,9 +301,9 @@ const getOfficeHours = async (req, res, next) => {
             isActive: isAttendanceActive
           },
           leave: {
-            start: leaveWindowStart.format("HH:mm"),
+            start: officeEnd.format("HH:mm"),
             end: leaveWindowEnd.format("HH:mm"),
-            startFormatted: leaveWindowStart.format("h:mm A"),
+            startFormatted: officeEnd.format("h:mm A"),
             endFormatted: leaveWindowEnd.format("h:mm A (next day)"),
             isActive: isLeaveActive
           }
@@ -304,14 +314,13 @@ const getOfficeHours = async (req, res, next) => {
       },
       message: "Office hours configuration retrieved"
     });
-
   } catch (error) {
     console.error("Get Office Hours Error:", error);
     next(error);
   }
 };
 
-
+// --- Update Office Hours ---
 const updateOfficeHours = async (req, res, next) => {
   try {
     const user = await authenticateUser(req);
@@ -328,8 +337,8 @@ const updateOfficeHours = async (req, res, next) => {
     const newHours = { startHour, startMinute, endHour, endMinute };
     await office_hours_collection.updateOne({ workspace_id }, { $set: { workspace_id, hours: newHours, updatedAt: new Date() } }, { upsert: true });
 
-    const officeStart = dayjs.tz("Asia/Dhaka").hour(startHour).minute(startMinute);
-    const officeEnd = dayjs.tz("Asia/Dhaka").hour(endHour).minute(endMinute);
+    const officeStart = safeDayjs(startHour, startMinute);
+    const officeEnd = safeDayjs(endHour, endMinute);
 
     res.json({
       success: true,
