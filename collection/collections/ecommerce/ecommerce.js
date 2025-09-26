@@ -21,6 +21,7 @@ const testimonials_collection = client.db('ecommerce').collection("testimonials"
 const newsletter_collection = client.db('ecommerce').collection("newsletter");
 const seo_collection = client.db('ecommerce').collection("general_seo");
 const themes_collection = client.db('ecommerce').collection("themes");
+const terms_collection = client.db('ecommerce').collection("terms");
 
 module.exports = { order_collection, customers_collection,carts_collection,banners_collection, contact_collection, blog_collection, blog_category_collection,coupon_collection,policy_collection, partnership_brand_collection,link_integration_collection, custom_sections_collection, promotions_collection, questions_collection, wishlists_collection, reviews_collection,
-achievements_collection, testimonials_collection, newsletter_collection, seo_collection,themes_collection};
+achievements_collection, testimonials_collection, newsletter_collection, seo_collection,themes_collection,terms_collection};
