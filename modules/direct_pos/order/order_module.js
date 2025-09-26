@@ -40,6 +40,70 @@ const get_orders = async (req, res, next) => {
   }
 };
 
+//Get Return order
+const get_return_orders = async (req, res, next) => {
+  try {
+    const workspace_id = req.headers.workspace_id;
+    const check_workspace = await workspace_collection.findOne({
+      _id: new ObjectId(workspace_id),
+    });
+    if (!check_workspace) {
+      return response_sender({
+        res,
+        status_code: 404,
+        error: true,
+        data: null,
+        message: "Workspace not found",
+      });
+    }
+
+    const orders = await orders_collection
+      .find({ workspace_id, delete: { $ne: true }, status:"Return"})
+      .toArray();
+    return response_sender({
+      res,
+      status_code: 200,
+      error: false,
+      data: orders,
+      message: "Orders fetched successfully.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+//Get Refund order
+const get_refund_orders = async (req, res, next) => {
+  try {
+    const workspace_id = req.headers.workspace_id;
+    const check_workspace = await workspace_collection.findOne({
+      _id: new ObjectId(workspace_id),
+    });
+    if (!check_workspace) {
+      return response_sender({
+        res,
+        status_code: 404,
+        error: true,
+        data: null,
+        message: "Workspace not found",
+      });
+    }
+
+    const orders = await orders_collection
+      .find({ workspace_id, delete: { $ne: true }, status:"Refund"})
+      .toArray();
+    return response_sender({
+      res,
+      status_code: 200,
+      error: false,
+      data: orders,
+      message: "Orders fetched successfully.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // CREATE Order
 const create_order = async (req, res, next) => {
   try {
@@ -67,7 +131,6 @@ const create_order = async (req, res, next) => {
       .toArray();
 
     let nextNumber;
-
     if (lastOrder.length === 0 || !lastOrder[0].order_number) {
       nextNumber = 1;
     } else {
@@ -75,8 +138,7 @@ const create_order = async (req, res, next) => {
       const lastNumber = parseInt(parts[parts.length - 1]);
       nextNumber = isNaN(lastNumber) ? 1 : lastNumber + 1;
     }
-
-    const order_number = `${prefix}_${String(nextNumber).padStart(2, "0")}`;
+    const order_number = `${prefix}_${String(nextNumber).padStart(4, "0")}`;
     let updated_data = enrichData(input_data);
     updated_data.workspace_id = workspace_id;
     updated_data.order_number = order_number;
@@ -193,4 +255,6 @@ module.exports = {
   create_order,
   update_order,
   delete_order,
+  get_return_orders,
+  get_refund_orders
 };
