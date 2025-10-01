@@ -38,6 +38,7 @@ const create_direct_sale = async (req, res, next) => {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
 
+    // Check workspace
     const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
     if (!check_workspace) {
       return response_sender({
@@ -49,11 +50,30 @@ const create_direct_sale = async (req, res, next) => {
       });
     }
 
+    // Generate order number
+    let lastOrder = await direct_sales_collection
+      .find({ workspace_id })
+      .sort({ _id: -1 }) // last inserted first
+      .limit(1)
+      .toArray();
+
+    let newOrderNumber = 'ORD00001';
+    if (lastOrder.length > 0 && lastOrder[0].order_number) {
+      const lastNumber = parseInt(lastOrder[0].order_number.replace('ORD', ''), 10);
+      const nextNumber = lastNumber + 1;
+      newOrderNumber = 'ORD' + nextNumber.toString().padStart(5, '0');
+    }
+
+    // Enrich input data
     let updated_data = enrichData(input_data);
     updated_data.workspace_id = workspace_id;
+    updated_data.order_number = newOrderNumber; 
+    updated_data.order_status = 'processing';
+
     const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
     updated_data.created_by = user_name?.name || "Unknown";
 
+    // Insert
     const result = await direct_sales_collection.insertOne(updated_data);
 
     return response_sender({
@@ -67,6 +87,7 @@ const create_direct_sale = async (req, res, next) => {
     next(error);
   }
 };
+
 
 // UPDATE Direct Sale
 const update_direct_sale = async (req, res, next) => {
