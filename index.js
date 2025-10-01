@@ -60,10 +60,10 @@ app.use((req, res, next) => {
       });
 });
 
+// Import cron jobs here
+require("./modules/hrm/attendance/corn_job");
+
 // Start server
 app.listen(port, () => {
-      // console.log(
-      //       `Example app listening at : `.underline.bold + `http://localhost:${port}`.green.underline.bold
-      // );
       console.log(`Example app listening at : ` + `http://localhost:${port}`);
 });
