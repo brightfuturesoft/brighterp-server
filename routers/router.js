@@ -12,6 +12,7 @@ const coa_router = require('../modules/accounts/coa/coa_router')
 const settings_router = require('../modules/settings/settings_router');
 const customers_order_router = require('../modules/customers_orders/customers_order_router');
 const customers_router = require('../modules/customers/customers_router');
+const ware_house_router = require('../modules/inventory/ware_house/ware_house_router');
 const direct_pos_router = require('../modules/direct_pos/direct_pos_router');
 const admin_router = require('../Admin_modules/Admin_router');
 const home_router = require('../modules/home/home_router');
@@ -70,6 +71,18 @@ const modulesRoutes = [
             route: customers_router,
       },
       {
+            path: '/inventory/ware_house',
+            route: ware_house_router,
+      },
+      {
+            path: '/inventory/stock_check',
+            route: require('../modules/inventory/stock_check/stock_check_router'),
+      },
+      {
+            path: '/inventory/stock_request',
+            route: require('../modules/inventory/stock_request/stock_request_router'),
+      },
+
             path: '/admin',
             route: admin_router,
       },
@@ -80,8 +93,8 @@ const modulesRoutes = [
             path:"/sale",
             route:sale_router
       }
-
 ];
 
 modulesRoutes.forEach(route => router.use(route.path, route.route));
+
 module.exports = router;

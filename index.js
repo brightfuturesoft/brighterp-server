@@ -7,7 +7,7 @@ const routes = require("./routers/router");
 const path = require("path");
 
 const app = express();
-const port = process.env.PORT || 5001;
+const port = process.env.PORT || 5005;
 
 app.use(cors({
       origin: 'http://localhost:5173',
