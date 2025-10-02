@@ -82,16 +82,16 @@ const modulesRoutes = [
             path: '/inventory/stock_request',
             route: require('../modules/inventory/stock_request/stock_request_router'),
       },
-
+      {
             path: '/admin',
             route: admin_router,
       },
       {
-            path:"/home",
-            route:home_router
-      },{
-            path:"/sale",
-            route:sale_router
+            path: "/home",
+            route: home_router
+      }, {
+            path: "/sale",
+            route: sale_router
       }
 ];
 
