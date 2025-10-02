@@ -32,6 +32,35 @@ const get_direct_sales = async (req, res, next) => {
   }
 };
 
+const get_delivery_direct_sales = async (req, res, next) => {
+  try {
+    const workspace_id = req.headers.workspace_id;
+    const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
+    if (!check_workspace) {
+      return response_sender({
+        res,
+        status_code: 404,
+        error: true,
+        data: null,
+        message: "Workspace not found",
+      });
+    }
+
+    const sales = await direct_sales_collection.find({ workspace_id, delete: { $ne: true }, order_status:"Delivery" }).toArray();
+    return response_sender({
+      res,
+      status_code: 200,
+      error: false,
+      data: sales,
+      message: "Direct sales fetched successfully.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
 // CREATE Direct Sale
 const create_direct_sale = async (req, res, next) => {
   try {
@@ -174,4 +203,5 @@ module.exports = {
   create_direct_sale,
   update_direct_sale,
   delete_direct_sale,
+  get_delivery_direct_sales
 };
