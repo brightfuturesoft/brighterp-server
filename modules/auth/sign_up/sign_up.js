@@ -81,12 +81,12 @@ const create_a_workspace = async (req, res, next) => {
                   html: generateVerificationEmail(
                         user_data.name,
                         workspace_data.name,
-                        `http://localhost:5173/verify-account/${created_user.insertedId}`
+                        `https://orybiz.com/verify-account/${created_user.insertedId}`
                   ),
             });
 
             const apiToken = "HHSY1Wpi_KIET9g4_pZllw-vq7WG1hO1Mlql7eWP"
-            const zoneId = "6f6bb7e6b58565fc93050f89e460fc20"
+            const zoneId = "65afef45b0ed6d1046cc1154e7faa33f"
             const subdomain = workspace_data.domain_info.subdomain;
             const ipAddress = "152.42.181.237"
             const apiEndpoint = `https://api.cloudflare.com/client/v4/zones/${zoneId}/dns_records`;
@@ -250,7 +250,7 @@ const check_workspace_by_unique_id = async (req, res, next) => {
             }
 
             const workspace = await workspace_collection.findOne({
-                  "domain_info.subdomain": `${unique_id}.brightfuturesoft.com`,
+                  "domain_info.subdomain": `${unique_id}.orybiz.tech`,
             });
 
             if (!workspace) {
