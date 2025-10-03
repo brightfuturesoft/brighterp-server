@@ -12,6 +12,7 @@ const coa_router = require('../modules/accounts/coa/coa_router')
 const settings_router = require('../modules/settings/settings_router');
 const customers_order_router = require('../modules/customers_orders/customers_order_router');
 const customers_router = require('../modules/customers/customers_router');
+const address_router = require('../modules/country/country_route');
 const ware_house_router = require('../modules/inventory/ware_house/ware_house_router');
 const direct_pos_router = require('../modules/direct_pos/direct_pos_router');
 const admin_router = require('../Admin_modules/Admin_router');
@@ -87,8 +88,14 @@ const modulesRoutes = [
             route: admin_router,
       },
       {
-            path: "/home",
-            route: home_router
+            path:"/home",
+            route:home_router
+      },{
+            path:"/sale",
+            route:sale_router
+      },{
+            path:"/address",
+            route:address_router
       }, {
             path: "/sale",
             route: sale_router
