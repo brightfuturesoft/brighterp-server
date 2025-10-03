@@ -18,15 +18,9 @@ app.use(cors({
 
 // CORS configuration
 const corsOptions = {
-      origin:
-            process.env.NODE_ENV === 'development'
-                  ? [
-                        'http://localhost:3000',
-                        'http://localhost:5173',
-                        'http://127.0.0.1:3000',
-                        'http://192.168.0.101:3000',
-                  ]
-                  : ['https://brighterpserver.vercel.app'],
+      origin: (origin, callback) => {
+            callback(null, true); // যেকোনো origin কে allow করবে
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
 };
