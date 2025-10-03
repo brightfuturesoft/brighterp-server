@@ -7,26 +7,16 @@ const routes = require("./routers/router");
 const path = require("path");
 
 const app = express();
-const port = process.env.PORT || 5001;
+const port = process.env.PORT || 5005;
 
-app.use(cors({
-      origin: 'http://localhost:5173',
-      credentials: true,
-}));
 
 
 
 // CORS configuration
 const corsOptions = {
-      origin:
-            process.env.NODE_ENV === 'development'
-                  ? [
-                        'http://localhost:3000',
-                        'http://localhost:5173',
-                        'http://127.0.0.1:3000',
-                        'http://192.168.0.101:3000',
-                  ]
-                  : ['https://brighterpserver.vercel.app'],
+      origin: (origin, callback) => {
+            callback(null, true); // যেকোনো origin কে allow করবে
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
 };
@@ -60,10 +50,10 @@ app.use((req, res, next) => {
       });
 });
 
+// Import cron jobs here
+require("./modules/hrm/attendance/corn_job");
+
 // Start server
 app.listen(port, () => {
-      // console.log(
-      //       `Example app listening at : `.underline.bold + `http://localhost:${port}`.green.underline.bold
-      // );
       console.log(`Example app listening at : ` + `http://localhost:${port}`);
 });

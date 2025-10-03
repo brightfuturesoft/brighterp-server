@@ -33,7 +33,6 @@ const get_manufacture = async (req, res, next) => {
 const create_manufacture = async (req, res, next) => {
       try {
             const input_data = req.body;
-            console.log(input_data);
             const workspace_id = req.headers.workspace_id;
             const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
             if (!check_workspace) {
@@ -76,8 +75,6 @@ const create_manufacture = async (req, res, next) => {
 const update_manufacture = async (req, res, next) => {
       try {
             const input_data = req.body;
-
-            console.log(input_data);
             const workspace_id = req.headers.workspace_id;
             const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
             if (!check_workspace) {
@@ -127,10 +124,7 @@ const delete_manufacture = async (req, res, next) => {
             delete updated_data._id;
             updated_data.delete = true;
 
-            console.log(input_data._id);
-
             const result = await manufacturer_collection.updateOne({ _id: new ObjectId(input_data.id) }, { $set: updated_data });
-            console.log(result);
             return response_sender({
                   res,
                   status_code: 200,

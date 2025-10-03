@@ -4,7 +4,7 @@ const { response_sender } = require("../../modules/hooks/respose_sender");
 const create_subscription = async (req, res, next) => {
       try {
             const data = req.body;
-            console.log(data);
+         
             const subscription = await subscription_collection.insertOne(data);
             response_sender({
                   res,

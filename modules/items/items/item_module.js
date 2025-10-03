@@ -34,7 +34,6 @@ const get_item = async (req, res, next) => {
 const create_item = async (req, res, next) => {
       try {
             const input_data = req.body;
-            console.log(input_data);
             const workspace_id = req.headers.workspace_id;
             const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
             if (!check_workspace) {
@@ -104,7 +103,7 @@ const update_item = async (req, res, next) => {
 
     // Update item using _id and workspace_id
     const result = await item_collection.updateOne(
-      { _id: new ObjectId(itemId)}, 
+      { _id: new ObjectId(itemId)},
       { $set: updated_data }
     );
 
@@ -135,8 +134,8 @@ const update_item = async (req, res, next) => {
 
 const update_item_status = async (req, res, next) => {
   try {
-    const { status } = req.body; 
-    const { id } = req.params; 
+    const { status } = req.body;
+    const { id } = req.params;
     const workspace_id = req.headers.workspace_id;
     const user_id = req.headers.authorization;
 
@@ -195,10 +194,7 @@ const delete_item = async (req, res, next) => {
             updated_data.created_by = user_name.name;
             delete updated_data._id;
             updated_data.delete = true;
-
-            console.log(input_data._id);
             const result = await item_collection.updateOne({ _id: new ObjectId(input_data.id) }, { $set: updated_data });
-            console.log(result);
             return response_sender({
                   res,
                   status_code: 200,

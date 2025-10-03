@@ -103,7 +103,6 @@ const get_orders = async (req, res, next) => {
 const get_single_order = async (req, res, next) => {
       const { order_number } = req.query;
       const check_order = await pos_orders_collection.findOne({ order_number: order_number });
-      console.log(check_order);
       return response_sender({
             res,
             status_code: 200,

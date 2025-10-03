@@ -24,7 +24,6 @@ const get_and_update_order_id = async (req, res, next) => {
 
             if (counter && counter.active_order_id) {
                   new_order_id = counter.active_order_id;
-                  console.log(new_order_id, 'active_order_id');
             } else {
                   let next_number = counter ? counter.last_order_number + 1 : 1;
                   let formatted_number = String(next_number).padStart(2, "0");
@@ -39,7 +38,6 @@ const get_and_update_order_id = async (req, res, next) => {
                   );
             }
 
-            console.log(new_order_id, 'new_order_id');
 
             return response_sender({
                   res,

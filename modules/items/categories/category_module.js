@@ -252,10 +252,7 @@ const delete_category = async (req, res, next) => {
             delete updated_data._id;
             updated_data.delete = true;
 
-            console.log(input_data._id);
-
             const result = await category_collection.updateOne({ _id: new ObjectId(input_data.id) }, { $set: updated_data });
-            console.log(result);
             return response_sender({
                   res,
                   status_code: 200,
@@ -270,7 +267,7 @@ const delete_category = async (req, res, next) => {
 
 const delete_many_category = async (req, res, next) => {
     try {
-        const { ids } = req.body; 
+        const { ids } = req.body;
         if (!ids || !Array.isArray(ids) || ids.length === 0) {
             return response_sender({
                 res,
