@@ -58,7 +58,7 @@ const create_a_workspace = async (req, res, next) => {
                   });
             }
 
-            console.log(workspace_data);
+
 
 
             const created_workspace = await create_workspace(workspace_data);
@@ -237,7 +237,7 @@ const verify_user = async (req, res, next) => {
 const check_workspace_by_unique_id = async (req, res, next) => {
       try {
             const unique_id = req.query.unique_id;
-            console.log(unique_id);
+
 
             if (!unique_id) {
                   return response_sender({
@@ -254,7 +254,7 @@ const check_workspace_by_unique_id = async (req, res, next) => {
             });
 
             if (!workspace) {
-                  console.log("available");
+                
                   return response_sender({
                         res,
                         status_code: 404,

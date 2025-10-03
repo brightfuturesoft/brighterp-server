@@ -581,7 +581,7 @@ const updateArea = async (req, res, next) => {
       }
       const normalizedStatus = statusValue === "enable" ? "Enable" : "Disable";
       const result = await area_collection.updateOne({ _id: new ObjectId(id) }, { $set: { status: normalizedStatus } });
-      console.log(`Area status updated to ${normalizedStatus} for id ${id}`);
+
       return response_sender({
         res,
         status_code: 200,
@@ -631,7 +631,7 @@ const updateRack = async (req, res, next) => {
       }
       const normalizedStatus = statusValue === "enable" ? "Enable" : "Disable";
       const result = await rack_collection.updateOne({ _id: new ObjectId(id) }, { $set: { status: normalizedStatus } });
-      console.log(`Rack status updated to ${normalizedStatus} for id ${id}`);
+
       return response_sender({
         res,
         status_code: 200,
@@ -685,7 +685,7 @@ const updateShelf = async (req, res, next) => {
       }
       const normalizedStatus = statusValue === "enable" ? "Enable" : "Disable";
       const result = await shelf_collection.updateOne({ _id: new ObjectId(id) }, { $set: { status: normalizedStatus } });
-      console.log(`Shelf status updated to ${normalizedStatus} for id ${id}`);
+
       return response_sender({
         res,
         status_code: 200,
@@ -734,7 +734,7 @@ const updateCell = async (req, res, next) => {
       }
       const normalizedStatus = statusValue === "enable" ? "Enable" : "Disable";
       const result = await cell_collection.updateOne({ _id: new ObjectId(id) }, { $set: { status: normalizedStatus } });
-      console.log(`Cell status updated to ${normalizedStatus} for id ${id}`);
+
       return response_sender({
         res,
         status_code: 200,
@@ -1126,7 +1126,7 @@ const updateAreaStatus = async (req, res, next) => {
     }
     const normalizedStatus = statusValue === "enable" ? "Enable" : "Disable";
     const result = await area_collection.updateOne({ _id: new ObjectId(id) }, { $set: { status: normalizedStatus } });
-    console.log(`Area status updated to ${normalizedStatus} for id ${id}`);
+
     return response_sender({
       res,
       status_code: 200,
@@ -1156,7 +1156,7 @@ const updateRackStatus = async (req, res, next) => {
     }
     const normalizedStatus = statusValue === "enable" ? "Enable" : "Disable";
     const result = await rack_collection.updateOne({ _id: new ObjectId(id) }, { $set: { status: normalizedStatus } });
-    console.log(`Rack status updated to ${normalizedStatus} for id ${id}`);
+
     return response_sender({
       res,
       status_code: 200,
@@ -1186,7 +1186,7 @@ const updateShelfStatus = async (req, res, next) => {
     }
     const normalizedStatus = statusValue === "enable" ? "Enable" : "Disable";
     const result = await shelf_collection.updateOne({ _id: new ObjectId(id) }, { $set: { status: normalizedStatus } });
-    console.log(`Shelf status updated to ${normalizedStatus} for id ${id}`);
+
     return response_sender({
       res,
       status_code: 200,
@@ -1216,7 +1216,7 @@ const updateCellStatus = async (req, res, next) => {
     }
     const normalizedStatus = statusValue === "enable" ? "Enable" : "Disable";
     const result = await cell_collection.updateOne({ _id: new ObjectId(id) }, { $set: { status: normalizedStatus } });
-    console.log(`Cell status updated to ${normalizedStatus} for id ${id}`);
+
     return response_sender({
       res,
       status_code: 200,
