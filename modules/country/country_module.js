@@ -1,18 +1,20 @@
-const fetch = require("node-fetch"); // npm install node-fetch
+const axios = require("axios"); // npm install axios
 const { response_sender } = require("../hooks/respose_sender");
 
 // Countries fetch
 const get_countries = async (req, res, next) => {
     try {
-        const response = await fetch(
-            'http://api.geonames.org/countryInfoJSON?username=brightfuturesoft'
+        const response = await axios.get(
+            "http://api.geonames.org/countryInfoJSON?username=brightfuturesoft"
         );
-        const data = await response.json();
-        const countries = data?.geonames?.map(country => ({
-            value: country.geonameId,
-            label: country.countryName,
-        })) || [];
-        
+
+        const data = response.data;
+        const countries =
+            data?.geonames?.map((country) => ({
+                value: country.geonameId,
+                label: country.countryName,
+            })) || [];
+
         return response_sender({
             res,
             status_code: 200,
@@ -38,16 +40,16 @@ const get_divisions = async (req, res, next) => {
                 message: "Country ID is required",
             });
         }
-
-        const response = await fetch(
+        const response = await axios.get(
             `http://api.geonames.org/childrenJSON?geonameId=${countryId}&username=brightfuturesoft`
         );
-        const data = await response.json();
-        const divisions = data?.geonames?.map(division => ({
-            value: division.geonameId,
-            label: division.name,
-        })) || [];
 
+        const data = response.data;
+        const divisions =
+            data?.geonames?.map((division) => ({
+                value: division.geonameId,
+                label: division.name,
+            })) || [];
         return response_sender({
             res,
             status_code: 200,
