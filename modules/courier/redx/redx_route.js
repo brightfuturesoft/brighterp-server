@@ -1,11 +1,12 @@
 const express = require('express');
+const { check_user } = require('../../hooks/check_user');
 const {
   create_redx_courier,
   get_redx_couriers,
   update_redx_courier,
   delete_redx_courier
 } = require('./redx_module');
-const { check_user } = require('../../hooks/check_user');
+
 
 const router = express.Router();
 

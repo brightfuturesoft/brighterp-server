@@ -3,7 +3,7 @@ const router = express.Router();
 const steedfast_router = require('./steedfast/steedfast_route');
 const pathao_router = require('./pathao/pathao_route');
 const redx_router = require('./redx/redx_route');
-const paperfly_router = require('./redx/redx_route');
+const paperfly_router = require('./paperfly/paperfly_route');
 
 
 const modules_Routes = [
