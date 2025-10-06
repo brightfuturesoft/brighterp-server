@@ -86,8 +86,8 @@ const update_paperfly_courier = async (req, res, next) => {
     }
 
     // Validate required fields if needed
-    const { base_url, api_key, api_secret } = input_data;
-    if (!base_url || !api_key || !api_secret) {
+    const { base_url, apiKey, apiSecret } = input_data;
+    if (!base_url || !apiKey || !apiSecret) {
       return response_sender({
         res,
         status_code: 400,
@@ -98,7 +98,7 @@ const update_paperfly_courier = async (req, res, next) => {
     }
 
     // Prepare updated data
-    let updated_data = enrichData({ base_url, api_key, api_secret });
+    let updated_data = enrichData({ base_url, apiKey, apiSecret });
     updated_data.workspace_id = workspace_id;
 
     const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
