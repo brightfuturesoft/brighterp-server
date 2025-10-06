@@ -72,11 +72,17 @@ const create_pathao_courier = async (req, res, next) => {
 };
 
 // UPDATE Pathao Courier
-const update_pathao_courier = async (req, res, next) => {
+import { ObjectId } from "mongodb";
+import { workspace_collection, pathao_couriers_collection } from "../db";
+import { response_sender } from "../utils/responseSender";
+import { enrichData } from "../utils/enrichData";
+
+export const update_pathao_courier = async (req, res, next) => {
   try {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
 
+    // Check workspace exists
     const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
     if (!check_workspace) {
       return response_sender({
@@ -88,14 +94,33 @@ const update_pathao_courier = async (req, res, next) => {
       });
     }
 
-    let updated_data = enrichData(input_data);
+    // Validate required fields
+    const { base_url, client_id, client_secret } = input_data;
+    if (!base_url || !client_id || !client_secret) {
+      return response_sender({
+        res,
+        status_code: 400,
+        error: true,
+        data: null,
+        message: "Base URL, Client ID, and Client Secret are required",
+      });
+    }
+
+    // Prepare updated data
+    let updated_data = enrichData({ base_url, client_id, client_secret });
     updated_data.workspace_id = workspace_id;
-    const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
-    updated_data.updated_by = user_name?.name || "Unknown";
+
+    // Who updated
+    const user = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
+    updated_data.updated_by = user?.name || "Unknown";
+
+    // Upsert logic: if ID exists, filter by ID; else filter by workspace_id
+    const filter = input_data.id ? { _id: new ObjectId(input_data.id) } : { workspace_id };
 
     const result = await pathao_couriers_collection.updateOne(
-      { _id: new ObjectId(input_data.id) },
-      { $set: updated_data }
+      filter,
+      { $set: updated_data },
+      { upsert: true }
     );
 
     return response_sender({
@@ -109,6 +134,7 @@ const update_pathao_courier = async (req, res, next) => {
     next(error);
   }
 };
+
 
 // DELETE Pathao Courier (soft delete)
 const delete_pathao_courier = async (req, res, next) => {

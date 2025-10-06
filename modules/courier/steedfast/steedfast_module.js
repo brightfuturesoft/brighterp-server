@@ -70,9 +70,10 @@ const create_courier = async (req, res, next) => {
 // UPDATE Courier
 const update_courier = async (req, res, next) => {
   try {
-    const input_data = req.body;
+    const input_data = req.body; 
     const workspace_id = req.headers.workspace_id;
 
+    // Check workspace exists
     const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
     if (!check_workspace) {
       return response_sender({
@@ -84,14 +85,24 @@ const update_courier = async (req, res, next) => {
       });
     }
 
+    // Prepare updated data
     let updated_data = enrichData(input_data);
     updated_data.workspace_id = workspace_id;
+
     const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
     updated_data.updated_by = user_name?.name || "Unknown";
 
+    let filter = {};
+    if (input_data.id) {
+      filter = { _id: new ObjectId(input_data.id) };
+    } else {
+      filter = { workspace_id };
+    }
+
     const result = await steedfast_couriers_collection.updateOne(
-      { _id: new ObjectId(input_data.id) },
-      { $set: updated_data }
+      filter,
+      { $set: updated_data },
+      { upsert: true } 
     );
 
     return response_sender({
@@ -105,6 +116,7 @@ const update_courier = async (req, res, next) => {
     next(error);
   }
 };
+
 
 // DELETE Courier (soft delete)
 const delete_courier = async (req, res, next) => {
