@@ -17,7 +17,7 @@ const get_pos_customer = async (req, res, next) => {
                         message: "Workspace not found",
                   });
             }
-            const get_customer = await workspace_customers_collection.find({ workspace_id: workspace_id, customer_type: "pos" }).toArray();
+            const get_customer = await workspace_customers_collection.find({ workspace_id: workspace_id, customer_type: "pos", delete: { $ne: true } }).toArray();
             return response_sender({
                   res,
                   status_code: 200,
@@ -135,8 +135,46 @@ const update_customer = async (req, res, next) => {
   }
 };
 
+
+const delete_customer = async (req, res, next) => {
+  try {
+    const input_data = req.body;
+    const workspace_id = req.headers.workspace_id;
+    const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
+    if (!check_workspace) {
+      return response_sender({
+        res,
+        status_code: 404,
+        error: true,
+        data: null,
+        message: "Workspace not found",
+      });
+    }
+
+    let updated_data = enrichData(input_data);
+    updated_data.updated_by = req.headers.authorization || "Unknown";
+    delete updated_data._id;
+    updated_data.delete = true;
+
+    const result = await workspace_customers_collection.updateOne(
+      { _id: new ObjectId(input_data.id) },
+      { $set: updated_data }
+    );
+    return response_sender({
+      res,
+      status_code: 200,
+      error: false,
+      data: result,
+      message: "Customer deleted successfully.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
       create_customer,
       get_pos_customer,
-      update_customer
+      update_customer,
+      delete_customer
 };
