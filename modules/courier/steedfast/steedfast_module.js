@@ -1,8 +1,8 @@
 const { ObjectId } = require("mongodb");
-const { workspace_couriers_collection } = require("../../collection/collections/courier/courier");
-const { enrichData } = require("../hooks/data_update");
-const { response_sender } = require("../hooks/respose_sender");
-const { workspace_collection } = require("../../collection/collections/auth");
+const { enrichData } = require("../../hooks/data_update");
+const { response_sender } = require("../../hooks/respose_sender");
+const { workspace_collection } = require("../../../collection/collections/auth");
+const { steedfast_couriers_collection } = require("../../../collection/collections/courier/courier");
 
 // GET Couriers
 const get_couriers = async (req, res, next) => {
@@ -19,7 +19,7 @@ const get_couriers = async (req, res, next) => {
       });
     }
 
-    const couriers = await workspace_couriers_collection.find({ workspace_id, delete: { $ne: true } }).toArray();
+    const couriers = await steedfast_couriers_collection.find({ workspace_id, delete: { $ne: true } }).toArray();
     return response_sender({
       res,
       status_code: 200,
@@ -53,7 +53,7 @@ const create_courier = async (req, res, next) => {
     const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
     updated_data.created_by = user_name?.name || "Unknown";
 
-    const result = await workspace_couriers_collection.insertOne(updated_data);
+    const result = await steedfast_couriers_collection.insertOne(updated_data);
 
     return response_sender({
       res,
@@ -70,9 +70,10 @@ const create_courier = async (req, res, next) => {
 // UPDATE Courier
 const update_courier = async (req, res, next) => {
   try {
-    const input_data = req.body;
+    const input_data = req.body; 
     const workspace_id = req.headers.workspace_id;
 
+    // Check workspace exists
     const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
     if (!check_workspace) {
       return response_sender({
@@ -84,14 +85,24 @@ const update_courier = async (req, res, next) => {
       });
     }
 
+    // Prepare updated data
     let updated_data = enrichData(input_data);
     updated_data.workspace_id = workspace_id;
+
     const user_name = await workspace_collection.findOne({ _id: new ObjectId(req.headers.authorization) });
     updated_data.updated_by = user_name?.name || "Unknown";
 
-    const result = await workspace_couriers_collection.updateOne(
-      { _id: new ObjectId(input_data.id) },
-      { $set: updated_data }
+    let filter = {};
+    if (input_data.id) {
+      filter = { _id: new ObjectId(input_data.id) };
+    } else {
+      filter = { workspace_id };
+    }
+
+    const result = await steedfast_couriers_collection.updateOne(
+      filter,
+      { $set: updated_data },
+      { upsert: true } 
     );
 
     return response_sender({
@@ -105,6 +116,7 @@ const update_courier = async (req, res, next) => {
     next(error);
   }
 };
+
 
 // DELETE Courier (soft delete)
 const delete_courier = async (req, res, next) => {
@@ -130,7 +142,7 @@ const delete_courier = async (req, res, next) => {
 
     delete updated_data._id;
 
-    const result = await workspace_couriers_collection.updateOne(
+    const result = await steedfast_couriers_collection.updateOne(
       { _id: new ObjectId(input_data.id) },
       { $set: updated_data }
     );
