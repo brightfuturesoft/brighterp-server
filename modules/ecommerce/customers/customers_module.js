@@ -72,6 +72,29 @@ const update_customer = async (req, res, next) => {
   try {
     const input_data = req.body;
     const workspace_id = req.headers.workspace_id;
+
+    // --- Validate required inputs ---
+    if (!workspace_id) {
+      return response_sender({
+        res,
+        status_code: 400,
+        error: true,
+        data: null,
+        message: "workspace_id is required in headers",
+      });
+    }
+
+    if (!input_data?.id) {
+      return response_sender({
+        res,
+        status_code: 400,
+        error: true,
+        data: null,
+        message: "Customer ID is required in request body",
+      });
+    }
+
+    // --- Check workspace existence ---
     const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
     if (!check_workspace) {
       return response_sender({
@@ -83,15 +106,30 @@ const update_customer = async (req, res, next) => {
       });
     }
 
-    let updated_data = enrichData(input_data);
+    // --- Enrich and clean input data ---
+    let updated_data = enrichData ? enrichData(input_data) : input_data;
     updated_data.workspace_id = workspace_id;
     updated_data.updated_by = req.headers.authorization || "Unknown";
     delete updated_data._id;
 
+    // --- Perform the update operation ---
     const result = await customers_collection.updateOne(
       { _id: new ObjectId(input_data.id) },
       { $set: updated_data }
     );
+
+    // --- Handle case: no match found ---
+    if (result.matchedCount === 0) {
+      return response_sender({
+        res,
+        status_code: 404,
+        error: true,
+        data: null,
+        message: "Customer not found",
+      });
+    }
+
+    // --- Success response ---
     return response_sender({
       res,
       status_code: 200,
@@ -100,10 +138,10 @@ const update_customer = async (req, res, next) => {
       message: "Customer updated successfully.",
     });
   } catch (error) {
+    console.error("Error in update_customer:", error);
     next(error);
   }
 };
-
 
 // DELETE Customer (soft delete)
 const delete_customer = async (req, res, next) => {
