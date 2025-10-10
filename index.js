@@ -11,14 +11,13 @@ const port = process.env.PORT || 5005;
 
 
 
-
-// CORS configuration
 const corsOptions = {
-      origin: (origin, callback) => {
-            callback(null, true); // যেকোনো origin কে allow করবে
-      },
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    origin: (origin, callback) => {
+        callback(null, true); 
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'workspace_id']
 };
 
 // Middleware
