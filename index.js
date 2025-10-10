@@ -11,7 +11,6 @@ const port = process.env.PORT || 5005;
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Development origins
     const devOrigins = [
       "http://localhost:3000",
       "http://localhost:5173",
