@@ -8,6 +8,7 @@ const { workspace_collection, user_collection } = require("../../../collection/c
 const get_color = async (req, res, next) => {
       try {
             const workspace_id = req.headers.workspace_id;
+            console.log(workspace_id)
             const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
             if (!check_workspace) {
                   return response_sender({
