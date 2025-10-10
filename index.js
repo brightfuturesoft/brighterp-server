@@ -9,8 +9,6 @@ const path = require("path");
 const app = express();
 const port = process.env.PORT || 5005;
 
-import cors from "cors";
-
 const corsOptions = {
   origin: (origin, callback) => {
     // Development origins
