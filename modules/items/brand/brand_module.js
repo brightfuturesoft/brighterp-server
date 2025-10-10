@@ -8,7 +8,9 @@ const { brand_collection } = require("../../../collection/collections/item/items
 
 const get_brand = async (req, res, next) => {
       try {
-            const workspace_id = req.headers.workspace_id;
+            console.log("req.headers", req.headers)
+          const workspace_id = req.headers?.workspace_id;
+            console.log(workspace_id)
             const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
             if (!check_workspace) {
                   return response_sender({

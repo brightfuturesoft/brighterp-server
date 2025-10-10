@@ -10,18 +10,20 @@ const app = express();
 const port = process.env.PORT || 5005;
 
 
-
 const corsOptions = {
-    origin: (origin, callback) => {
-        callback(null, true); 
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'workspace_id']
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Workspace-id'],
+  exposedHeaders: ['Authorization'],
+  optionsSuccessStatus: 200,
 };
 
-// Middleware
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
