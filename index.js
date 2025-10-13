@@ -15,7 +15,7 @@ const port = process.env.PORT || 5005;
 // CORS configuration
 const corsOptions = {
       origin: (origin, callback) => {
-            callback(null, true); // যেকোনো origin কে allow করবে
+            callback(null, true);
       },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -31,6 +31,15 @@ app.get("/", (req, res) => {
       res.sendFile(path.join(__dirname, "index.html"));
 });
 // Routes
+
+app.use((req, res, next) => {
+  if (!req.headers.workspace_id && req.headers["workspace-id"]) {
+    req.headers.workspace_id = req.headers["workspace-id"];
+  }
+  next();
+});
+
+
 app.use('/api/v1', routes);
 
 // Root route

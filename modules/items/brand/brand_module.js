@@ -7,32 +7,37 @@ const { brand_collection } = require("../../../collection/collections/item/items
 
 
 const get_brand = async (req, res, next) => {
-      try {
-            console.log("req.headers", req.headers)
-          const workspace_id = req.headers?.workspace_id;
-            console.log(workspace_id)
-            const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
-            if (!check_workspace) {
-                  return response_sender({
-                        res,
-                        status_code: 404,
-                        error: true,
-                        data: null,
-                        message: "Workspace not found",
-                  });
-            }
-            const manufactures = await brand_collection.find({ workspace_id, delete: { $ne: true } }).toArray();
-            return response_sender({
-                  res,
-                  status_code: 200,
-                  error: false,
-                  data: manufactures,
-                  message: "Brand fetched successfully.",
-            });
-      } catch (error) {
-            next(error);
-      }
-}
+  try {
+    const workspace_id = req.headers?.workspace_id;
+    console.log(req.headers)
+    const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
+    if (!check_workspace) {
+      return response_sender({
+        res,
+        status_code: 404,
+        error: true,
+        data: null,
+        message: "Workspace not found",
+      });
+    }
+
+    const manufactures = await brand_collection.find({
+      workspace_id,
+      delete: { $ne: true }
+    }).toArray();
+
+    return response_sender({
+      res,
+      status_code: 200,
+      error: false,
+      data: manufactures,
+      message: "Brand fetched successfully.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 const create_brand = async (req, res, next) => {
       try {
