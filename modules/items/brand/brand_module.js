@@ -8,7 +8,9 @@ const { brand_collection } = require("../../../collection/collections/item/items
 
 const get_brand = async (req, res, next) => {
       try {
-            const workspace_id = req.headers.workspace_id;
+            console.log("req.headers", req.headers)
+          const workspace_id = req.headers?.workspace_id;
+            console.log(workspace_id)
             const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
             if (!check_workspace) {
                   return response_sender({
@@ -35,7 +37,7 @@ const get_brand = async (req, res, next) => {
 const create_brand = async (req, res, next) => {
       try {
             const input_data = req.body;
-            console.log(input_data);
+
             const workspace_id = req.headers.workspace_id;
             const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
             if (!check_workspace) {
@@ -78,8 +80,6 @@ const create_brand = async (req, res, next) => {
 const update_brand = async (req, res, next) => {
       try {
             const input_data = req.body;
-
-            console.log(input_data);
             const workspace_id = req.headers.workspace_id;
             const check_workspace = await workspace_collection.findOne({ _id: new ObjectId(workspace_id) });
             if (!check_workspace) {
@@ -129,10 +129,8 @@ const delete_brand = async (req, res, next) => {
             delete updated_data._id;
             updated_data.delete = true;
 
-            console.log(input_data._id);
-
             const result = await brand_collection.updateOne({ _id: new ObjectId(input_data.id) }, { $set: updated_data });
-            console.log(result);
+
             return response_sender({
                   res,
                   status_code: 200,

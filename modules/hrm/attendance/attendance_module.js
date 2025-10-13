@@ -6,9 +6,9 @@ const {
   office_hours_collection
 } = require("../../../collection/collections/hrm/employees");
 const { user_collection } = require("../../../collection/collections/auth");
-const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
+const dayjs = require("dayjs");
 
 // --- Extend Dayjs ---
 dayjs.extend(utc);
@@ -38,9 +38,9 @@ const getWorkspaceOfficeHours = async (workspace_id) => {
   const config = await office_hours_collection.findOne({ workspace_id });
 
   const defaultHours = {
-    startHour: 15, // 3:00 PM
+    startHour: 15,
     startMinute: 0,
-    endHour: 22, // 10:00 PM
+    endHour: 22,
     endMinute: 0
   };
 

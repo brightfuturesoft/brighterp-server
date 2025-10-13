@@ -6,7 +6,6 @@ const router = express.Router();
 router.post("/send-mail", async (req, res) => {
   try {
     const { to, subject, body } = req.body;
-    console.log(req.body)
 
     if (!to || !subject || !body) {
       return res

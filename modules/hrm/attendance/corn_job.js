@@ -40,12 +40,12 @@ const getOfficeHoursCollection = () => {
 const getAllWorkspaceConfigs = async () => {
   const officeHoursCollection = getOfficeHoursCollection();
   const configs = await officeHoursCollection.find({}).toArray();
-  
+
   // Get all unique workspace IDs from employees
   const workspaces = await employees_collection.distinct("workspace_id");
-  
+
   const workspaceConfigs = {};
-  
+
   // Set default hours for workspaces without config
   for (const workspace_id of workspaces) {
     const config = configs.find(c => c.workspace_id === workspace_id);
@@ -56,7 +56,7 @@ const getAllWorkspaceConfigs = async () => {
       endMinute: 0
     };
   }
-  
+
   return workspaceConfigs;
 };
 
@@ -64,17 +64,17 @@ const getAllWorkspaceConfigs = async () => {
 // Run every 10 minutes to check all workspaces
 cron.schedule("*/10 * * * *", async () => {
   try {
-    console.log("⏰ Running dynamic attendance check...");
-    
+
+
     const now = dayjs.tz("Asia/Dhaka");
     const today = now.startOf("day").toDate();
-    
+
     // Get all workspace configurations
     const workspaceConfigs = await getAllWorkspaceConfigs();
-    
+
     for (const [workspace_id, officeHours] of Object.entries(workspaceConfigs)) {
       const { startHour, startMinute } = officeHours;
-      
+
       // Check if current time is 10-20 minutes after office start for this workspace
       const officeStart = dayjs.tz("Asia/Dhaka")
         .hour(startHour)
@@ -82,21 +82,20 @@ cron.schedule("*/10 * * * *", async () => {
         .second(0);
       const windowStart = officeStart.add(10, 'minute');
       const windowEnd = officeStart.add(20, 'minute');
-      
+
       if (now.isAfter(windowStart) && now.isBefore(windowEnd)) {
-        console.log(`Processing attendance for workspace ${workspace_id} at ${now.format("h:mm A")}`);
-        
+
         // Fetch employees for this workspace
         const employees = await employees_collection
           .find({ workspace_id })
           .toArray();
-        
+
         for (const emp of employees) {
           const existingRecord = await attendance_collection.findOne({
             employeeId: emp._id,
             date: today,
           });
-          
+
           // If no record exists, mark as Absent
           if (!existingRecord) {
             await attendance_collection.insertOne({
@@ -108,26 +107,26 @@ cron.schedule("*/10 * * * *", async () => {
               checkInTime: null,
               createdAt: new Date(),
             });
-            console.log(`Marked ${emp.name || emp._id} as absent for workspace ${workspace_id}`);
+
           }
         }
       }
     }
-    
-    console.log("✅ Dynamic attendance check completed.");
+
+
   } catch (error) {
-    console.error("❌ Dynamic attendance cron job failed:", error);
+next(error)
   }
 });
 
 // --- Leave processing: Check approved leaves once daily ---
 cron.schedule("0 1 * * *", async () => {
   try {
-    console.log("📌 Running daily leave processing job...");
-    
+
+
     const now = dayjs.tz("Asia/Dhaka");
     const today = now.startOf("day").toDate();
-    
+
     // Fetch all approved leaves that cover today
     const leavesToday = await leave_collection
       .find({
@@ -136,28 +135,28 @@ cron.schedule("0 1 * * *", async () => {
         status: "Approved",
       })
       .toArray();
-    
+
     if (!Array.isArray(leavesToday)) {
       console.error("Leave fetch did not return an array:", leavesToday);
       return;
     }
-    
+
     for (const leave of leavesToday) {
       const existingRecord = await attendance_collection.findOne({
         employeeId: leave.employeeId,
         date: today,
       });
-      
+
       if (existingRecord) {
         // Update existing record to Leave
         await attendance_collection.updateOne(
           { _id: existingRecord._id },
-          { 
-            $set: { 
-              status: "Leave", 
-              markedBy: "system", 
-              updatedAt: new Date() 
-            } 
+          {
+            $set: {
+              status: "Leave",
+              markedBy: "system",
+              updatedAt: new Date()
+            }
           }
         );
       } else {
@@ -173,26 +172,26 @@ cron.schedule("0 1 * * *", async () => {
         });
       }
     }
-    
-    console.log("✅ Leave processing completed.");
+
+
   } catch (error) {
-    console.error("❌ Leave processing job failed:", error);
+    next(error)
   }
 });
 
 // --- Monthly attendance report generation (optional) ---
 cron.schedule("0 0 1 * *", async () => {
   try {
-    console.log("📊 Generating monthly attendance reports...");
-    
+
+
     const now = dayjs.tz("Asia/Dhaka");
     const lastMonth = now.subtract(1, 'month');
     const startOfLastMonth = lastMonth.startOf('month').toDate();
     const endOfLastMonth = lastMonth.endOf('month').toDate();
-    
+
     // Get all employees
     const employees = await employees_collection.find({}).toArray();
-    
+
     for (const employee of employees) {
       const attendanceRecords = await attendance_collection
         .find({
@@ -200,20 +199,17 @@ cron.schedule("0 0 1 * *", async () => {
           date: { $gte: startOfLastMonth, $lte: endOfLastMonth }
         })
         .toArray();
-      
+
       const presentDays = attendanceRecords.filter(r => r.status === "Present").length;
       const leaveDays = attendanceRecords.filter(r => r.status === "Leave").length;
       const absentDays = attendanceRecords.filter(r => r.status === "Absent").length;
-      
-      console.log(`Employee ${employee.name || employee._id}: Present: ${presentDays}, Leave: ${leaveDays}, Absent: ${absentDays}`);
-      
-      // You can save this report to a separate collection if needed
+
+
     }
-    
-    console.log("✅ Monthly reports generated.");
+
+
   } catch (error) {
-    console.error("❌ Monthly report generation failed:", error);
+    next(error)
   }
 });
 
-console.log("🚀 Attendance cron jobs initialized successfully!");
